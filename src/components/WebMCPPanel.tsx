@@ -101,8 +101,48 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
             </AlertDescription>
           </Alert>
         )}
+
+        <Card className="flex-shrink-0 bg-card/30 border-primary/10">
+          <CardContent className="p-3">
+            <div className="text-sm font-semibold text-foreground mb-2">
+              How to Test WebMCP
+            </div>
+            <div className="text-xs text-muted-foreground space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="font-semibold flex-shrink-0">1.</span>
+                <div>
+                  <span className="font-semibold">Click a tool button below</span>
+                  <span className="block text-muted-foreground/80">View structured JSON responses</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="font-semibold flex-shrink-0">2.</span>
+                <div>
+                  <span className="font-semibold">Open browser console</span>
+                  <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.list()</code>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="font-semibold flex-shrink-0">3.</span>
+                <div>
+                  <span className="font-semibold">Call tools directly</span>
+                  <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.call('get_app_state')</code>
+                </div>
+              </div>
+              {webmcpStatus.isSupported && (
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold flex-shrink-0">4.</span>
+                  <div>
+                    <span className="font-semibold">Native API available</span>
+                    <span className="block text-accent mt-0.5">Tools registered via navigator.modelContext ✓</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         
-        <ScrollArea className="max-h-[280px]">
+        <ScrollArea className="max-h-[280px] flex-shrink-0">
           <div className="grid grid-cols-1 gap-2 pr-3">
             {tools.map((tool) => (
               <Button
@@ -133,50 +173,25 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
           </div>
         </ScrollArea>
         
-        <Separator />
-        
-        {result ? (
-          <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between flex-shrink-0">
-              <span className="font-mono text-sm text-primary">{result.tool}</span>
-              <span className="text-xs text-muted-foreground">
-                {new Date(result.timestamp).toLocaleTimeString()}
-              </span>
-            </div>
-            <Card className="flex-1 bg-card/50 border-primary/20 min-h-0 overflow-hidden">
-              <ScrollArea className="h-full">
-                <CardContent className="p-0">
-                  <JsonViewer data={result.data} />
-                </CardContent>
-              </ScrollArea>
-            </Card>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-4">
-            <div className="text-sm font-semibold text-foreground">
-              How to Test WebMCP
-            </div>
-            <div className="text-xs text-muted-foreground max-w-xs space-y-3">
-              <div className="text-left space-y-1">
-                <p className="font-semibold">1. Click a tool button above</p>
-                <p className="ml-3">View structured JSON responses</p>
+        {result && (
+          <>
+            <Separator />
+            <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-hidden">
+              <div className="flex items-center justify-between flex-shrink-0">
+                <span className="font-mono text-sm text-primary">{result.tool}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(result.timestamp).toLocaleTimeString()}
+                </span>
               </div>
-              <div className="text-left space-y-1">
-                <p className="font-semibold">2. Open browser console</p>
-                <p className="ml-3"><code className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">window.webMCP.tools.list()</code></p>
-              </div>
-              <div className="text-left space-y-1">
-                <p className="font-semibold">3. Call tools directly</p>
-                <p className="ml-3"><code className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">window.webMCP.tools.call('get_app_state')</code></p>
-              </div>
-              {webmcpStatus.isSupported && (
-                <div className="text-left space-y-1">
-                  <p className="font-semibold">4. Native API available</p>
-                  <p className="ml-3 text-accent">Tools registered via navigator.modelContext ✓</p>
-                </div>
-              )}
+              <Card className="flex-1 bg-card/50 border-primary/20 min-h-0 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <CardContent className="p-0">
+                    <JsonViewer data={result.data} />
+                  </CardContent>
+                </ScrollArea>
+              </Card>
             </div>
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
