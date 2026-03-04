@@ -1,6 +1,6 @@
 # Planning Guide
 
-A self-diagnosing SaaS dashboard that demonstrates the power of WebMCP (Model Context Protocol for web applications) by exposing internal application state, business rules, and debugging context through structured tools that AI agents can use to diagnose issues that would be impossible to debug using only DOM inspection and console logs.
+A self-diagnosing SaaS dashboard **React application** that demonstrates the power of WebMCP (Model Context Protocol for the Browser) by implementing the official WebMCP specification to expose internal application state, business rules, and debugging context through a standardized browser API (`window.webMCP`) that AI agents, browser assistants, and assistive technologies can use to diagnose issues that would be impossible to debug using only DOM inspection and console logs.
 
 **Experience Qualities**:
 1. **Educational** - Clearly demonstrates the difference between traditional DOM-based debugging and context-aware WebMCP debugging
