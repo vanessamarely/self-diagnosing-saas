@@ -11,11 +11,30 @@ interface WebMCPToolDefinition {
   handler: (args: Record<string, unknown>) => unknown
 }
 
+interface ModelContextAPI {
+  provideContext(tool: {
+    name: string
+    description: string
+    inputSchema: {
+      type: string
+      properties?: Record<string, unknown>
+      required?: string[]
+    }
+    handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
+  }): void
+}
+
+interface NavigatorWithModelContext extends Navigator {
+  modelContext?: ModelContextAPI
+}
+
 interface WebMCPInterface {
   tools: {
     list: () => WebMCPToolDefinition[]
     call: (name: string, args?: Record<string, unknown>) => unknown
   }
+  isSupported: boolean
+  usingPolyfill: boolean
 }
 
 let appStateRef: AppState | null = null
@@ -25,12 +44,33 @@ export function setAppState(state: AppState) {
   appStateRef = state
 }
 
+function isWebMCPSupported(): boolean {
+  return typeof window !== 'undefined' && 
+         'navigator' in window && 
+         'modelContext' in (window.navigator as NavigatorWithModelContext) &&
+         typeof (window.navigator as NavigatorWithModelContext).modelContext?.provideContext === 'function'
+}
+
 function registerWebMCPTool(definition: WebMCPToolDefinition) {
   const existingIndex = toolDefinitions.findIndex(t => t.name === definition.name)
   if (existingIndex >= 0) {
     toolDefinitions[existingIndex] = definition
   } else {
     toolDefinitions.push(definition)
+  }
+
+  if (typeof window !== 'undefined') {
+    const nav = window.navigator as NavigatorWithModelContext
+    
+    if (isWebMCPSupported() && nav.modelContext) {
+      nav.modelContext.provideContext({
+        name: definition.name,
+        description: definition.description,
+        inputSchema: definition.inputSchema,
+        handler: definition.handler
+      })
+      console.log(`[WebMCP Native] Registered tool: ${definition.name}`)
+    }
   }
 }
 
@@ -254,6 +294,8 @@ export function initializeWebMCPTools() {
   })
 
   if (typeof window !== 'undefined') {
+    const supported = isWebMCPSupported()
+    
     const webMCP: WebMCPInterface = {
       tools: {
         list: () => toolDefinitions,
@@ -262,11 +304,21 @@ export function initializeWebMCPTools() {
           if (!tool) throw new Error(`Tool ${name} not found`)
           return tool.handler(args)
         }
-      }
+      },
+      isSupported: supported,
+      usingPolyfill: !supported
     };
 
     (window as unknown as { webMCP: WebMCPInterface }).webMCP = webMCP
     
-    console.log('[WebMCP] Registered tools:', toolDefinitions.map(t => t.name))
+    if (supported) {
+      console.log('[WebMCP Native] All tools registered via navigator.modelContext.provideContext')
+      console.log('[WebMCP Native] Registered tools:', toolDefinitions.map(t => t.name))
+    } else {
+      console.warn('[WebMCP Polyfill] navigator.modelContext.provideContext not available')
+      console.warn('[WebMCP Polyfill] Using fallback window.webMCP interface')
+      console.log('[WebMCP Polyfill] Registered tools:', toolDefinitions.map(t => t.name))
+      console.log('[WebMCP Polyfill] Try: window.webMCP.tools.list()')
+    }
   }
 }
