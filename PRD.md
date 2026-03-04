@@ -1,153 +1,147 @@
 # Planning Guide
 
-A self-diagnosing SaaS dashboard **React application** that demonstrates the power of WebMCP (Model Context Protocol for the Browser) by implementing the official WebMCP specification to expose internal application state, business rules, and debugging context through a standardized browser API (`window.webMCP`) that AI agents, browser assistants, and assistive technologies can use to diagnose issues that would be impossible to debug using only DOM inspection and console logs.
+A browser extension that demonstrates the native `navigator.modelContext` API by providing context to on-device AI models running in the browser, showcasing how web applications can enhance AI capabilities by sharing structured information about the current page, user interactions, and application state.
 
 **Experience Qualities**:
-1. **Educational** - Clearly demonstrates the difference between traditional DOM-based debugging and context-aware WebMCP debugging
-2. **Interactive** - Users can trigger intentional bugs and use WebMCP tools to diagnose them in real-time
-3. **Professional** - Resembles a real SaaS admin dashboard with realistic business logic and failure scenarios
+1. **Educational** - Clearly demonstrates how `navigator.modelContext.provideContext()` works with real examples
+2. **Interactive** - Users can see context being provided in real-time as they browse and interact with content
+3. **Transparent** - Shows exactly what context is being shared with AI models and why
 
 **Complexity Level**: Light Application (multiple features with basic state)
-This is a demonstration app with a simulated dashboard, order management, and debugging tools. It focuses on showcasing WebMCP capabilities rather than building a full-featured SaaS platform.
+This is a demonstration browser extension that showcases the `navigator.modelContext` API with a popup interface, background service worker, and content script that provides context to on-device AI models.
 
 ## Essential Features
 
-### Order Management
-- **Functionality**: Display a list of orders with status, amount, and customer information
-- **Purpose**: Provide realistic data context for debugging scenarios
-- **Trigger**: Loads automatically on app start
-- **Progression**: App loads → Orders render from state → User can view order details → User can filter/sort orders
-- **Success criteria**: Orders display correctly with all relevant information and update in real-time
+### Context Provider Interface
+- **Functionality**: Main popup UI that shows active contexts being provided to the AI model
+- **Purpose**: Visualize what context is currently being shared with on-device AI
+- **Trigger**: User clicks the extension icon
+- **Progression**: Click icon → Popup opens → Shows list of active contexts → User can enable/disable contexts → Contexts update in real-time
+- **Success criteria**: Clear visualization of all active contexts with the ability to toggle them on/off
 
-### Order Creation
-- **Functionality**: Form to create new orders with validation
-- **Purpose**: Trigger business rule conflicts and validation errors
-- **Trigger**: User clicks "Create Order" button
-- **Progression**: Click create → Form dialog opens → User fills details → Submit → Validation runs → Business rules check → Order created or error shown
-- **Success criteria**: Valid orders are created; invalid orders show appropriate error messages
+### Page Content Context
+- **Functionality**: Automatically provides page metadata (title, URL, description) as context
+- **Purpose**: Give AI models basic information about the current page
+- **Trigger**: Page loads or content changes
+- **Progression**: Page loads → Content script extracts metadata → Calls `navigator.modelContext.provideContext()` → Context visible in popup
+- **Success criteria**: Page metadata is correctly extracted and provided as context
 
-### Checkout Flow
-- **Functionality**: Multi-step checkout process with payment simulation
-- **Purpose**: Demonstrate complex failure scenarios with hidden business rule conflicts
-- **Trigger**: User selects an order and clicks "Checkout"
-- **Progression**: Select order → Checkout modal opens → Enter payment details → Submit → Business rules validate → Success or failure with cryptic error
-- **Success criteria**: Successful checkouts complete; intentional failures show business rule conflicts
+### Selected Text Context
+- **Functionality**: When user selects text, it's provided as context to the AI
+- **Purpose**: Allow AI to understand what specific content the user is focusing on
+- **Trigger**: User selects text on any webpage
+- **Progression**: User selects text → Selection event fires → Context script provides selected text → AI receives context → Popup shows active selection context
+- **Success criteria**: Selected text is captured and provided as context immediately
 
-### Admin Panel
-- **Functionality**: Settings panel with feature flags and user permissions
-- **Purpose**: Create conflicts between feature flags and user permissions that cause hidden bugs
-- **Trigger**: User clicks "Admin Settings" button
-- **Progression**: Click admin → Panel opens → View/edit feature flags → View/edit permissions → Save changes → State updates
-- **Success criteria**: Settings persist and affect application behavior correctly
+### User Interaction Context
+- **Functionality**: Tracks and provides context about user interactions (clicks, form inputs, navigation)
+- **Purpose**: Help AI understand user intent and current task
+- **Trigger**: User interacts with page elements
+- **Progression**: User clicks/types → Event captured → Interaction summary provided as context → Context shows in popup with timestamp
+- **Success criteria**: Meaningful interaction patterns are captured without overwhelming the AI with noise
 
-### WebMCP Debug Tools Panel
-- **Functionality**: Interactive panel with buttons to call WebMCP tools and display results
-- **Purpose**: Demonstrate how WebMCP exposes internal context for AI-powered debugging
-- **Trigger**: Always visible in a sidebar when in dashboard view
-- **Progression**: Click tool button → Tool executes → Structured JSON displays → AI can use data to diagnose issues
-- **Success criteria**: All tools return accurate, structured data about application state
+### Custom Context Builder
+- **Functionality**: UI in popup to manually add custom context
+- **Purpose**: Let users explicitly provide additional context to the AI
+- **Trigger**: User clicks "Add Custom Context" button
+- **Progression**: Click add → Text input appears → User types context → Submit → Context provided to AI → Shows in active contexts list
+- **Success criteria**: Custom context is successfully provided and visible
 
-### Comparison View
-- **Functionality**: Side-by-side comparison of traditional DOM/console debugging vs WebMCP context-aware debugging
-- **Purpose**: Visually demonstrate the time savings and accuracy improvements of WebMCP over traditional debugging methods
-- **Trigger**: User clicks "Show Comparison" button in header
-- **Progression**: Click comparison → View switches to split panel → Left side shows traditional debugging steps → Right side shows WebMCP approach → Stats displayed at bottom showing time savings
-- **Success criteria**: Clearly illustrates that WebMCP is faster (60+ seconds vs 15 seconds), more accurate, and requires zero guesswork
-
-### Intentional Bug System
-- **Functionality**: Pre-configured bugs that demonstrate different failure modes
-- **Purpose**: Show realistic scenarios where WebMCP provides critical debugging context
-- **Trigger**: Specific user actions trigger the bugs
-- **Progression**: User action → Bug occurs → Error shows in UI → WebMCP tools reveal root cause
-- **Success criteria**: Bugs are reproducible and WebMCP tools clearly expose the underlying issues
+### Context History View
+- **Functionality**: Timeline view showing all context provided in the current session
+- **Purpose**: Transparency and debugging - show users exactly what's been shared
+- **Trigger**: User switches to "History" tab in popup
+- **Progression**: Click history tab → Timeline renders → Shows all contexts with timestamps → User can click to see details
+- **Success criteria**: Complete history of all provided contexts with timestamps and details
 
 ## Edge Case Handling
 
-- **Empty Orders List**: Show empty state with helpful message to create first order
-- **Invalid Form Input**: Validate all fields and show inline error messages
-- **Permission Denied**: Show clear error when user lacks permissions for an action
-- **Feature Flag Conflicts**: Detect and expose when multiple flags create contradictory states
-- **Failed Checkout**: Capture failed events and make them queryable via WebMCP tools
-- **Network Simulation**: Since this is client-only, simulate async delays for realism
+- **API Not Available**: Detect if `navigator.modelContext` is undefined and show helpful message about enabling the feature
+- **Context Limit Exceeded**: Handle gracefully if too much context is provided
+- **No Page Context**: Handle pages where content extraction fails (e.g., iframes, restricted pages)
+- **Rapid Selections**: Debounce selection events to avoid overwhelming the API
+- **Extension Disabled**: Clear all contexts when extension is disabled
+- **Privacy Mode**: Respect when users are in private browsing
 
 ## Design Direction
 
-The design should evoke a sense of technical sophistication and debugging clarity - this is a developer tool demonstration, so it should feel precise, information-dense, and terminal-inspired. Think of a blend between a modern SaaS dashboard and a debugging console, with clear visual separation between the "app" and the "debugging tools".
+The design should feel like a sophisticated developer tool with a modern browser extension aesthetic - clean, compact, and information-dense while remaining approachable. Think Chrome DevTools meets a modern AI assistant interface with clear visual hierarchy and excellent readability in a small popup space.
 
 ## Color Selection
 
-The color scheme should emphasize technical precision with high contrast for readability, using a dark terminal aesthetic for the debugging panel and a clean professional look for the dashboard.
+A refined developer-focused color scheme that works well in both light and dark browser themes, with high contrast for the compact popup space.
 
-- **Primary Color**: Deep cyan `oklch(0.65 0.18 210)` - Communicates technical precision and debugging focus, used for WebMCP tool buttons and active states
+- **Primary Color**: Vibrant blue `oklch(0.55 0.22 250)` - Modern and trustworthy, used for active contexts and primary actions
 - **Secondary Colors**: 
-  - Slate gray `oklch(0.35 0.02 240)` for panels and cards
-  - Dark charcoal `oklch(0.18 0.01 240)` for the debugging console background
-- **Accent Color**: Electric lime `oklch(0.75 0.20 130)` for success states and active debugging indicators
+  - Soft slate `oklch(0.40 0.02 250)` for secondary panels
+  - Near-white `oklch(0.98 0.01 250)` for backgrounds
+- **Accent Color**: Electric purple `oklch(0.60 0.25 300)` for AI-related indicators and active states
 - **Foreground/Background Pairings**: 
-  - Background (Dark Charcoal `oklch(0.18 0.01 240)`): Bright text `oklch(0.95 0.01 240)` - Ratio 12.1:1 ✓
-  - Primary (Deep Cyan `oklch(0.65 0.18 210)`): Dark text `oklch(0.15 0 0)` - Ratio 7.8:1 ✓
-  - Accent (Electric Lime `oklch(0.75 0.20 130)`): Dark text `oklch(0.15 0 0)` - Ratio 10.2:1 ✓
-  - Cards (Slate Gray `oklch(0.35 0.02 240)`): Light text `oklch(0.92 0.01 240)` - Ratio 8.5:1 ✓
+  - Background (Near-white `oklch(0.98 0.01 250)`): Dark text `oklch(0.20 0.01 250)` - Ratio 14.2:1 ✓
+  - Primary (Vibrant Blue `oklch(0.55 0.22 250)`): White text `oklch(0.99 0 0)` - Ratio 5.8:1 ✓
+  - Accent (Electric Purple `oklch(0.60 0.25 300)`): White text `oklch(0.99 0 0)` - Ratio 6.2:1 ✓
+  - Cards (Soft Slate `oklch(0.40 0.02 250)`): Light text `oklch(0.96 0.01 250)` - Ratio 10.1:1 ✓
 
 ## Font Selection
 
-Typefaces should evoke technical precision and readability, using a monospace font for the debugging panel to reinforce the developer tool aesthetic, and a clean sans-serif for the dashboard UI.
+Typefaces should be highly readable in the compact extension popup space, with clear hierarchy and a modern technical feel.
 
 - **Typographic Hierarchy**: 
-  - H1 (Dashboard Title): Space Grotesk Bold/32px/tight tracking
-  - H2 (Section Headers): Space Grotesk SemiBold/24px/normal tracking
-  - H3 (Card Titles): Space Grotesk Medium/18px/normal tracking
-  - Body (UI Text): Space Grotesk Regular/14px/relaxed leading
-  - Code/Debug (WebMCP Output): JetBrains Mono Regular/13px/monospace leading
+  - H1 (Extension Title): Inter SemiBold/18px/tight tracking
+  - H2 (Section Headers): Inter Medium/14px/normal tracking
+  - H3 (Context Labels): Inter Medium/12px/wide tracking (uppercase)
+  - Body (Context Content): Inter Regular/13px/relaxed leading
+  - Code (API Output): SF Mono/12px/monospace leading
 
 ## Animations
 
-Animations should be subtle and functional, emphasizing state changes and the execution of debugging tools without distracting from the information-dense interface.
+Animations should be swift and purposeful in the compact popup space, providing feedback without delaying interactions.
 
-- State transitions (tool execution) should use a 200ms ease with a subtle pulse effect
-- Order creation and checkout flows should have smooth 300ms modal transitions
-- WebMCP tool results should fade in with a 150ms duration to feel instant but polished
-- Failed events should shake briefly (200ms) to draw attention
-- Success confirmations should scale up slightly (scale 1.02) for 200ms
+- Context additions should fade in with 150ms duration
+- Toggle switches should animate smoothly over 200ms
+- Tab transitions should slide with 250ms ease-out
+- New context items should pulse once (300ms) when added
+- API status indicators should have a subtle breathing animation (2s loop)
+- Expansion of context details should animate height over 200ms
 
 ## Component Selection
 
 - **Components**: 
-  - `Card` for order items and admin panels
-  - `Button` for all actions, with variants for primary (create), secondary (view), and destructive (debug trigger)
-  - `Dialog` for order creation and checkout flows
-  - `Table` for orders list with sortable columns
-  - `Badge` for order status (pending, completed, failed)
-  - `Tabs` for switching between orders view and admin settings
-  - `ScrollArea` for the WebMCP debug output panel
-  - `Separator` to divide dashboard sections from debug tools
-  - `Alert` for showing error states and warnings
+  - `Card` for each context item in the list
+  - `Button` for actions (small size for popup space)
+  - `Badge` for context types (page, selection, interaction, custom)
+  - `Switch` for enabling/disabling contexts
+  - `Tabs` for switching between active contexts and history
+  - `ScrollArea` for scrollable context lists
+  - `Textarea` for custom context input
+  - `Separator` between context items
+  - `Alert` for API status messages
 - **Customizations**: 
-  - Custom "debug panel" component with monospace font and terminal styling
-  - Custom "bug indicator" badge that pulses when a bug is active
-  - Custom JSON viewer component for WebMCP tool output with syntax highlighting
+  - Custom "context card" component optimized for popup width (380px)
+  - Custom "API status indicator" showing if modelContext API is available
+  - Custom "context badge" with icons for each context type
+  - Custom "timestamp" component for history entries
 - **States**: 
-  - Buttons have distinct hover (brightness increase), active (scale down), and loading (spinner) states
-  - Cards have hover states with subtle elevation increase
-  - Debug tool buttons glow when executing
-  - Form inputs show validation states inline
+  - Buttons: hover (brightness), active (scale 0.98), disabled (opacity 0.5)
+  - Context cards: hover (shadow increase), active (border highlight)
+  - Switches: smooth toggle animation with color transition
+  - Text inputs: focus ring with accent color
 - **Icon Selection**: 
-  - `Bug` for bug indicators and debug triggers
-  - `Play` for executing WebMCP tools
-  - `ShoppingCart` for orders
-  - `Plus` for creating new orders
-  - `Gear` for admin settings
-  - `Warning` for errors and conflicts
-  - `Check` for success states
+  - `Brain` or `Sparkles` for AI/model indicators
+  - `FileText` for page content contexts
+  - `TextCursor` for selected text contexts
+  - `MousePointer` for interaction contexts
+  - `PencilSimple` for custom contexts
+  - `Clock` for history/timestamps
+  - `Toggle` for enable/disable controls
 - **Spacing**: 
-  - Container padding: `p-6`
-  - Card padding: `p-4`
-  - Section gaps: `gap-6`
-  - Form field gaps: `gap-4`
-  - Tight grouping: `gap-2`
+  - Popup padding: `p-4` (compact for extension)
+  - Context card padding: `p-3`
+  - Section gaps: `gap-3`
+  - Tight grouping: `gap-1.5`
+  - List items: `gap-2`
 - **Mobile**: 
-  - Stack dashboard and debug panel vertically on mobile
-  - Convert table to card list on screens < 768px
-  - Make debug panel collapsible on mobile with fixed bottom button
-  - Reduce font sizes by 10% on mobile
-  - Modal dialogs take full screen on mobile
+  - Extension popup is fixed width (380px) and adapts to browser chrome
+  - Focus on vertical scrolling for context lists
+  - Ensure touch targets are minimum 44px for accessibility
+  - Stack action buttons vertically if needed

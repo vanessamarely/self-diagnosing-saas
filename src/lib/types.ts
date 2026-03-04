@@ -1,67 +1,52 @@
-export type OrderStatus = 'pending' | 'processing' | 'completed' | 'failed'
-
-export interface Order {
+export interface ModelContext {
   id: string
-  customerName: string
-  email: string
-  amount: number
-  status: OrderStatus
-  createdAt: string
-  items: string[]
-}
-
-export interface UserSession {
-  userId: string
-  userName: string
-  role: 'admin' | 'user' | 'guest'
-  permissions: string[]
-  loginTime: string
-  sessionId: string
-}
-
-export interface FeatureFlag {
-  name: string
-  enabled: boolean
-  description: string
-  requiredPermission?: string
-}
-
-export interface BusinessRule {
-  id: string
-  name: string
-  condition: string
-  action: string
-  priority: number
+  type: 'page' | 'selection' | 'interaction' | 'custom'
+  content: string
+  metadata?: Record<string, any>
+  timestamp: number
   enabled: boolean
 }
 
-export interface FailedEvent {
-  id: string
-  timestamp: string
-  eventType: string
-  errorMessage: string
-  context: Record<string, unknown>
-  stackTrace?: string
+export interface ContextMessage {
+  type: 'context-added' | 'context-removed' | 'context-updated' | 'get-contexts' | 'contexts-response' | 'toggle-context' | 'add-context' | 'check-api'
+  context?: ModelContext
+  contexts?: ModelContext[]
+  contextId?: string
+  available?: boolean
 }
 
-export interface AppState {
-  orders: Order[]
-  userSession: UserSession
-  featureFlags: FeatureFlag[]
-  businessRules: BusinessRule[]
-  failedEvents: FailedEvent[]
+export interface ModelContextAPI {
+  provideContext(context: string, metadata?: any): Promise<void>
+  clearContext(contextId?: string): Promise<void>
+  getContexts(): Promise<ModelContext[]>
 }
 
-export interface WebMCPToolResult {
-  tool: string
-  timestamp: string
-  data: unknown
+declare global {
+  interface Navigator {
+    modelContext?: ModelContextAPI
+  }
+  
+  const chrome: {
+    runtime: {
+      onMessage: {
+        addListener: (callback: (message: any, sender: any, sendResponse: (response?: any) => void) => void | boolean) => void
+        removeListener: (callback: (message: any, sender: any, sendResponse: (response?: any) => void) => void | boolean) => void
+      }
+      lastError?: { message: string }
+      sendMessage: (message: any, callback?: (response: any) => void) => void
+    }
+    tabs: {
+      query: (queryInfo: { active?: boolean; currentWindow?: boolean }) => Promise<Array<{ id?: number; url?: string }>>
+      sendMessage: (tabId: number, message: any, callback?: (response: any) => void) => void
+    }
+    storage: {
+      local: {
+        get: (keys: string[]) => Promise<Record<string, any>>
+        set: (items: Record<string, any>) => Promise<void>
+      }
+    }
+  }
 }
 
-export type WebMCPTool = 
-  | 'get_app_state'
-  | 'get_user_session'
-  | 'get_business_rules'
-  | 'get_failed_events'
-  | 'reproduce_bug'
-  | 'generate_bug_report'
+export {}
+
