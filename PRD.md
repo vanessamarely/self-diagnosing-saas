@@ -43,9 +43,16 @@ This is a demonstration app with a simulated dashboard, order management, and de
 ### WebMCP Debug Tools Panel
 - **Functionality**: Interactive panel with buttons to call WebMCP tools and display results
 - **Purpose**: Demonstrate how WebMCP exposes internal context for AI-powered debugging
-- **Trigger**: Always visible in a sidebar or bottom panel
+- **Trigger**: Always visible in a sidebar when in dashboard view
 - **Progression**: Click tool button → Tool executes → Structured JSON displays → AI can use data to diagnose issues
 - **Success criteria**: All tools return accurate, structured data about application state
+
+### Comparison View
+- **Functionality**: Side-by-side comparison of traditional DOM/console debugging vs WebMCP context-aware debugging
+- **Purpose**: Visually demonstrate the time savings and accuracy improvements of WebMCP over traditional debugging methods
+- **Trigger**: User clicks "Show Comparison" button in header
+- **Progression**: Click comparison → View switches to split panel → Left side shows traditional debugging steps → Right side shows WebMCP approach → Stats displayed at bottom showing time savings
+- **Success criteria**: Clearly illustrates that WebMCP is faster (60+ seconds vs 15 seconds), more accurate, and requires zero guesswork
 
 ### Intentional Bug System
 - **Functionality**: Pre-configured bugs that demonstrate different failure modes

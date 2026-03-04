@@ -9,11 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
-import { Plus, ShoppingCart, Gear, Warning, Bug } from '@phosphor-icons/react'
+import { Plus, ShoppingCart, Gear, Warning, Bug, Columns } from '@phosphor-icons/react'
 import type { AppState, Order, FeatureFlag } from '@/lib/types'
 import { createInitialState, recordFailedEvent, generateNewOrder } from '@/lib/state'
 import { initializeWebMCPTools } from '@/lib/webmcp'
 import { WebMCPPanel } from '@/components/WebMCPPanel'
+import { ComparisonView } from '@/components/ComparisonView'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
@@ -25,6 +26,7 @@ function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [activeView, setActiveView] = useState<'dashboard' | 'comparison'>('dashboard')
   
   const [newOrderData, setNewOrderData] = useState({
     customerName: '',
@@ -205,6 +207,14 @@ function App() {
               <p className="text-muted-foreground">WebMCP Debugging Demo</p>
             </div>
             <div className="flex gap-2">
+              <Button 
+                variant={activeView === 'comparison' ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setActiveView(activeView === 'dashboard' ? 'comparison' : 'dashboard')}
+              >
+                <Columns />
+                {activeView === 'dashboard' ? 'Show Comparison' : 'Show Dashboard'}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setAdminOpen(true)}>
                 <Gear />
                 Admin
@@ -223,84 +233,92 @@ function App() {
             </div>
           </div>
 
-          <Card className="flex-1 flex flex-col min-h-0">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingCart />
-                  Orders
-                </CardTitle>
-                <CardDescription>
-                  Manage customer orders and process checkouts
-                </CardDescription>
-              </div>
-              <Button onClick={() => setCreateOrderOpen(true)}>
-                <Plus />
-                Create Order
-              </Button>
-            </CardHeader>
-            <CardContent className="flex-1 min-h-0">
-              <div className="border rounded-lg overflow-hidden h-full flex flex-col">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                </Table>
-                <div className="flex-1 overflow-auto">
-                  <Table>
-                    <TableBody>
-                      {appState.orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-mono text-xs">{order.id}</TableCell>
-                          <TableCell>{order.customerName}</TableCell>
-                          <TableCell className="text-muted-foreground">{order.email}</TableCell>
-                          <TableCell className="font-semibold">${order.amount.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {order.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => {
-                                  setSelectedOrder(order)
-                                  setCheckoutOpen(true)
-                                }}
-                              >
-                                Checkout
-                              </Button>
-                            )}
-                          </TableCell>
+          {activeView === 'dashboard' ? (
+            <>
+              <Card className="flex-1 flex flex-col min-h-0">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ShoppingCart />
+                      Orders
+                    </CardTitle>
+                    <CardDescription>
+                      Manage customer orders and process checkouts
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setCreateOrderOpen(true)}>
+                    <Plus />
+                    Create Order
+                  </Button>
+                </CardHeader>
+                <CardContent className="flex-1 min-h-0">
+                  <div className="border rounded-lg overflow-hidden h-full flex flex-col">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                      </TableHeader>
+                    </Table>
+                    <div className="flex-1 overflow-auto">
+                      <Table>
+                        <TableBody>
+                          {appState.orders.map((order) => (
+                            <TableRow key={order.id}>
+                              <TableCell className="font-mono text-xs">{order.id}</TableCell>
+                              <TableCell>{order.customerName}</TableCell>
+                              <TableCell className="text-muted-foreground">{order.email}</TableCell>
+                              <TableCell className="font-semibold">${order.amount.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {order.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => {
+                                      setSelectedOrder(order)
+                                      setCheckoutOpen(true)
+                                    }}
+                                  >
+                                    Checkout
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {appState.failedEvents.length > 0 && (
-            <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
-              <AlertDescription>
-                {appState.failedEvents.length} error(s) detected. Use WebMCP tools to diagnose →
-              </AlertDescription>
-            </Alert>
+              {appState.failedEvents.length > 0 && (
+                <Alert variant="destructive">
+                  <Warning className="h-4 w-4" />
+                  <AlertDescription>
+                    {appState.failedEvents.length} error(s) detected. Use WebMCP tools to diagnose →
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          ) : (
+            <ComparisonView appState={appState} />
           )}
         </div>
 
-        <div className="lg:w-[500px] flex flex-col min-h-0">
-          <WebMCPPanel appState={appState} />
-        </div>
+        {activeView === 'dashboard' && (
+          <div className="lg:w-[500px] flex flex-col min-h-0">
+            <WebMCPPanel appState={appState} />
+          </div>
+        )}
       </div>
 
       <Dialog open={createOrderOpen} onOpenChange={setCreateOrderOpen}>
