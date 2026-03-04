@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Play, CheckCircle, Warning, Info } from '@phosphor-icons/react'
 import type { AppState, WebMCPTool, WebMCPToolResult } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
@@ -15,13 +16,28 @@ interface WebMCPPanelProps {
   appState: AppState
 }
 
-const tools: { name: WebMCPTool; description: string }[] = [
-  { name: 'get_app_state', description: 'Get overall application state summary' },
-  { name: 'get_user_session', description: 'Get current user session details' },
-  { name: 'get_business_rules', description: 'Get all business rules' },
-  { name: 'get_failed_events', description: 'Get all failed event logs' },
-  { name: 'reproduce_bug', description: 'Reproduce the last bug with full context' },
-  { name: 'generate_bug_report', description: 'Generate comprehensive bug report' },
+const toolCategories = [
+  {
+    category: 'State & Session',
+    tools: [
+      { name: 'get_app_state' as WebMCPTool, description: 'Get overall application state summary' },
+      { name: 'get_user_session' as WebMCPTool, description: 'Get current user session details' },
+    ]
+  },
+  {
+    category: 'Configuration',
+    tools: [
+      { name: 'get_business_rules' as WebMCPTool, description: 'Get all business rules' },
+    ]
+  },
+  {
+    category: 'Debugging',
+    tools: [
+      { name: 'get_failed_events' as WebMCPTool, description: 'Get all failed event logs' },
+      { name: 'reproduce_bug' as WebMCPTool, description: 'Reproduce the last bug with full context' },
+      { name: 'generate_bug_report' as WebMCPTool, description: 'Generate comprehensive bug report' },
+    ]
+  }
 ]
 
 interface WebMCPStatus {
@@ -102,76 +118,91 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
           </Alert>
         )}
 
-        <Card className="flex-shrink-0 bg-card/30 border-primary/10">
-          <CardContent className="p-3">
-            <div className="text-sm font-semibold text-foreground mb-2">
+        <Accordion type="multiple" defaultValue={['instructions']} className="flex-shrink-0">
+          <AccordionItem value="instructions" className="border rounded-lg px-4 bg-card/30">
+            <AccordionTrigger className="text-sm font-semibold hover:no-underline py-3">
               How to Test WebMCP
-            </div>
-            <div className="text-xs text-muted-foreground space-y-2">
-              <div className="flex items-start gap-2">
-                <span className="font-semibold flex-shrink-0">1.</span>
-                <div>
-                  <span className="font-semibold">Click a tool button below</span>
-                  <span className="block text-muted-foreground/80">View structured JSON responses</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold flex-shrink-0">2.</span>
-                <div>
-                  <span className="font-semibold">Open browser console</span>
-                  <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.list()</code>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="font-semibold flex-shrink-0">3.</span>
-                <div>
-                  <span className="font-semibold">Call tools directly</span>
-                  <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.call('get_app_state')</code>
-                </div>
-              </div>
-              {webmcpStatus.isSupported && (
+            </AccordionTrigger>
+            <AccordionContent className="pb-3">
+              <div className="text-xs text-muted-foreground space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="font-semibold flex-shrink-0">4.</span>
+                  <span className="font-semibold flex-shrink-0">1.</span>
                   <div>
-                    <span className="font-semibold">Native API available</span>
-                    <span className="block text-accent mt-0.5">Tools registered via navigator.modelContext ✓</span>
+                    <span className="font-semibold">Click a tool button below</span>
+                    <span className="block text-muted-foreground/80">View structured JSON responses</span>
                   </div>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <ScrollArea className="max-h-[280px] flex-shrink-0">
-          <div className="grid grid-cols-1 gap-2 pr-3">
-            {tools.map((tool) => (
-              <Button
-                key={tool.name}
-                variant="secondary"
-                className="justify-start gap-2 h-auto py-2 px-3"
-                onClick={() => handleExecuteTool(tool.name)}
-                disabled={executingTool !== null}
-              >
-                {executingTool === tool.name ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <Play className="text-primary flex-shrink-0" />
-                  </motion.div>
-                ) : (
-                  <Play className="text-primary flex-shrink-0" />
-                )}
-                <div className="flex flex-col items-start text-left">
-                  <span className="font-mono text-xs">{tool.name}</span>
-                  <span className="text-xs text-muted-foreground font-normal">
-                    {tool.description}
-                  </span>
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold flex-shrink-0">2.</span>
+                  <div>
+                    <span className="font-semibold">Open browser console</span>
+                    <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.list()</code>
+                  </div>
                 </div>
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold flex-shrink-0">3.</span>
+                  <div>
+                    <span className="font-semibold">Call tools directly</span>
+                    <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.call('get_app_state')</code>
+                  </div>
+                </div>
+                {webmcpStatus.isSupported && (
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold flex-shrink-0">4.</span>
+                    <div>
+                      <span className="font-semibold">Native API available</span>
+                      <span className="block text-accent mt-0.5">Tools registered via navigator.modelContext ✓</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        
+        <Accordion type="multiple" defaultValue={['state', 'config', 'debug']} className="flex-shrink-0">
+          {toolCategories.map(({ category, tools }) => (
+            <AccordionItem 
+              key={category} 
+              value={category.toLowerCase().replace(/\s+/g, '-')}
+              className="border rounded-lg px-4 mb-2 bg-card/30"
+            >
+              <AccordionTrigger className="text-sm font-semibold hover:no-underline py-3">
+                {category}
+              </AccordionTrigger>
+              <AccordionContent className="pb-3">
+                <div className="space-y-2">
+                  {tools.map((tool) => (
+                    <Button
+                      key={tool.name}
+                      variant="secondary"
+                      className="w-full justify-start gap-2 h-auto py-2 px-3"
+                      onClick={() => handleExecuteTool(tool.name)}
+                      disabled={executingTool !== null}
+                    >
+                      {executingTool === tool.name ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Play className="text-primary flex-shrink-0" />
+                        </motion.div>
+                      ) : (
+                        <Play className="text-primary flex-shrink-0" />
+                      )}
+                      <div className="flex flex-col items-start text-left">
+                        <span className="font-mono text-xs">{tool.name}</span>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {tool.description}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
         
         {result && (
           <>
