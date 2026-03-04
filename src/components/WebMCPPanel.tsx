@@ -47,63 +47,72 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
 
   return (
     <Card className="h-full flex flex-col bg-muted/50">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-xl">WebMCP Debug Tools</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm">
           Internal application context exposed for AI debugging
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="grid grid-cols-1 gap-2">
-          {tools.map((tool) => (
-            <Button
-              key={tool.name}
-              variant="secondary"
-              className="justify-start gap-2 h-auto py-2 px-3"
-              onClick={() => handleExecuteTool(tool.name)}
-              disabled={executingTool !== null}
-            >
-              {executingTool === tool.name ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Play className="text-primary" />
-                </motion.div>
-              ) : (
-                <Play className="text-primary" />
-              )}
-              <div className="flex flex-col items-start">
-                <span className="font-mono text-xs">{tool.name}</span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  {tool.description}
-                </span>
-              </div>
-            </Button>
-          ))}
-        </div>
+      <CardContent className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+        <ScrollArea className="max-h-[280px]">
+          <div className="grid grid-cols-1 gap-2 pr-3">
+            {tools.map((tool) => (
+              <Button
+                key={tool.name}
+                variant="secondary"
+                className="justify-start gap-2 h-auto py-2 px-3"
+                onClick={() => handleExecuteTool(tool.name)}
+                disabled={executingTool !== null}
+              >
+                {executingTool === tool.name ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Play className="text-primary flex-shrink-0" />
+                  </motion.div>
+                ) : (
+                  <Play className="text-primary flex-shrink-0" />
+                )}
+                <div className="flex flex-col items-start text-left">
+                  <span className="font-mono text-xs">{tool.name}</span>
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {tool.description}
+                  </span>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
         
         <Separator />
         
         {result ? (
-          <div className="flex-1 flex flex-col gap-2 min-h-0">
-            <div className="flex items-center justify-between">
+          <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between flex-shrink-0">
               <span className="font-mono text-sm text-primary">{result.tool}</span>
               <span className="text-xs text-muted-foreground">
                 {new Date(result.timestamp).toLocaleTimeString()}
               </span>
             </div>
-            <Card className="flex-1 bg-card/50 border-primary/20 min-h-0">
-              <CardContent className="p-0 h-full">
-                <ScrollArea className="h-full">
+            <Card className="flex-1 bg-card/50 border-primary/20 min-h-0 overflow-hidden">
+              <ScrollArea className="h-full">
+                <CardContent className="p-0">
                   <JsonViewer data={result.data} />
-                </ScrollArea>
-              </CardContent>
+                </CardContent>
+              </ScrollArea>
             </Card>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-            Click a tool to execute and view results
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-4">
+            <div className="text-sm text-muted-foreground max-w-xs">
+              <strong>How to use WebMCP Tools:</strong>
+            </div>
+            <div className="text-xs text-muted-foreground max-w-xs space-y-2">
+              <p>1. Click any tool button above to execute it</p>
+              <p>2. View the structured JSON response below</p>
+              <p>3. Try the console: <code className="font-mono bg-muted px-1 py-0.5 rounded">window.webMCP.tools.list()</code></p>
+            </div>
           </div>
         )}
       </CardContent>

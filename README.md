@@ -2,6 +2,16 @@
 
 This **React application** demonstrates the power of **WebMCP** (Model Context Protocol for Web Applications) for debugging complex application issues by exposing internal application context through a standardized browser API.
 
+## 🚀 Quick Start: Verify WebMCP is Working
+
+**→ [VERIFICATION_GUIDE.md](./VERIFICATION_GUIDE.md) ← Start here to confirm everything is working!**
+
+The guide includes:
+- ✅ Visual checklist for the UI panel
+- ✅ Console commands to test the API
+- ✅ Step-by-step bug scenarios
+- ✅ Troubleshooting common issues
+
 ## About This Application
 
 ### Is this a React app?
