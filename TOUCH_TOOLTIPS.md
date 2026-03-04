@@ -6,7 +6,8 @@ This application now supports **tap and hold interactions** for tooltips on mobi
 
 ### Desktop (Mouse/Trackpad)
 - **Hover**: Move your cursor over any tool button to see the tooltip immediately
-- Tooltips appear on hover and disappear when you move away
+- Tooltips appear to the **right** of buttons for optimal visibility
+- Tooltips disappear when you move away
 
 ### Mobile (Touch Screens)
 - **Tap and Hold**: Press and hold on any tool button for 500ms
@@ -16,6 +17,7 @@ This application now supports **tap and hold interactions** for tooltips on mobi
   - Haptic feedback (vibration) when tooltip appears (if supported)
 - **Auto-dismiss**: Tooltip automatically closes after 2 seconds
 - **Manual dismiss**: Move your finger or lift it to close immediately
+- **Positioning**: Tooltips appear to the right to ensure they're visible on screen
 
 ## Features
 
@@ -33,6 +35,8 @@ This application now supports **tap and hold interactions** for tooltips on mobi
 - Button scales down slightly when held (gives physical feedback)
 - Primary-colored border flashes during hold
 - Tooltip content has high contrast text
+- **Enhanced z-index**: Tooltips appear above all other content (z-index: 9999)
+- **Shadow**: Tooltips include a subtle shadow for depth and visibility
 
 ## Implementation
 

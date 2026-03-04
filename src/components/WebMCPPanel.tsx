@@ -260,7 +260,7 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
                   {tools.map((tool) => (
                     <TouchTooltip
                       key={tool.name}
-                      side="left"
+                      side="right"
                       sideOffset={10}
                       className="max-w-xs p-3"
                       content={
