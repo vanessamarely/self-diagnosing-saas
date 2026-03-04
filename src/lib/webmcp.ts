@@ -22,8 +22,12 @@ interface ModelContextTool {
   handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
 }
 
+interface ProvideContextParams {
+  tools: ModelContextTool[]
+}
+
 interface ModelContextAPI {
-  provideContext(tool: ModelContextTool): void
+  provideContext(params: ProvideContextParams): void
 }
 
 interface NavigatorWithModelContext {
@@ -68,14 +72,17 @@ function syncWebMCPTools() {
     
     if (isWebMCPSupported() && nav.modelContext) {
       try {
-        toolDefinitions.forEach(def => {
-          nav.modelContext!.provideContext({
-            name: def.name,
-            description: def.description,
-            inputSchema: def.inputSchema,
-            handler: def.handler
-          })
+        const tools = toolDefinitions.map(def => ({
+          name: def.name,
+          description: def.description,
+          inputSchema: def.inputSchema,
+          handler: def.handler
+        }))
+        
+        nav.modelContext!.provideContext({
+          tools: tools
         })
+        
         console.log('[WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext')
         console.log('[WebMCP Native] ✓ Registered tools:', toolDefinitions.map(t => t.name))
       } catch (error) {

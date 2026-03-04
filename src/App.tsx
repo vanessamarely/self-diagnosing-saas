@@ -16,12 +16,14 @@ import {
   CheckCircle,
   Plus,
   Code,
+  Robot,
 } from '@phosphor-icons/react'
 import type { AppState, Order } from '@/lib/types'
 import { createInitialState, generateNewOrder, recordFailedEvent } from '@/lib/state'
 import { initializeWebMCPTools, setAppState } from '@/lib/webmcp'
 import { WebMCPPanel } from '@/components/WebMCPPanel'
 import { ComparisonView } from '@/components/ComparisonView'
+import { AIAssistant } from '@/components/AIAssistant'
 import { toast, Toaster } from 'sonner'
 
 function App() {
@@ -170,7 +172,7 @@ function App() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="orders">
               <ShoppingCart className="mr-2" size={16} />
               Orders
@@ -182,6 +184,10 @@ function App() {
             <TabsTrigger value="admin">
               <UserCircle className="mr-2" size={16} />
               Admin Panel
+            </TabsTrigger>
+            <TabsTrigger value="ai">
+              <Robot className="mr-2" size={16} />
+              AI Assistant
             </TabsTrigger>
             <TabsTrigger value="debug">
               <Code className="mr-2" size={16} />
@@ -404,6 +410,10 @@ function App() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="ai" className="mt-6">
+            <AIAssistant appState={appState} />
           </TabsContent>
 
           <TabsContent value="debug" className="mt-6">
