@@ -1,286 +1,420 @@
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Sparkle, FileText, Cursor, Mouse, PencilSimple, Clock, Plus, Info } from '@phosphor-icons/react'
-import type { ModelContext } from '@/lib/types'
-import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
+import {
+  ShoppingCart,
+  UserCircle,
+  ClipboardText,
+  Warning,
+  CheckCircle,
+  Plus,
+  Code,
+} from '@phosphor-icons/react'
+import type { AppState, Order } from '@/lib/types'
+import { createInitialState, generateNewOrder, recordFailedEvent } from '@/lib/state'
+import { initializeWebMCPTools, setAppState } from '@/lib/webmcp'
+import { WebMCPPanel } from '@/components/WebMCPPanel'
+import { ComparisonView } from '@/components/ComparisonView'
+import { toast, Toaster } from 'sonner'
 
 function App() {
-  const [contexts, setContexts] = useState<ModelContext[]>([])
-  const [customContext, setCustomContext] = useState('')
-  const [apiAvailable, setApiAvailable] = useState<boolean | null>(null)
-  const [activeTab, setActiveTab] = useState('active')
+  const [appState, setInternalAppState] = useState<AppState>(() => createInitialState())
+  const [newOrderForm, setNewOrderForm] = useState({
+    customerName: '',
+    email: '',
+    amount: '',
+    items: '',
+  })
 
   useEffect(() => {
-    checkAPIAvailability()
-    loadContexts()
-
-    const messageListener = (message: any) => {
-      if (message.type === 'context-added') {
-        setContexts(prev => [...prev, message.context])
-        toast.success('Context added')
-      } else if (message.type === 'context-updated') {
-        loadContexts()
-      }
-    }
-
-    chrome.runtime.onMessage.addListener(messageListener)
-    return () => chrome.runtime.onMessage.removeListener(messageListener)
+    initializeWebMCPTools()
+    setAppState(appState)
   }, [])
 
-  const checkAPIAvailability = async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab.id) return
+  useEffect(() => {
+    setAppState(appState)
+  }, [appState])
 
-    chrome.tabs.sendMessage(tab.id, { type: 'check-api' }, (response) => {
-      if (chrome.runtime.lastError) {
-        setApiAvailable(false)
-        return
-      }
-      setApiAvailable(response?.available || false)
-    })
-  }
-
-  const loadContexts = async () => {
-    const result = await chrome.storage.local.get(['contexts'])
-    setContexts(result.contexts || [])
-  }
-
-  const addCustomContext = async () => {
-    if (!customContext.trim()) {
-      toast.error('Please enter some context')
+  const handleCreateOrder = () => {
+    if (!newOrderForm.customerName || !newOrderForm.email || !newOrderForm.amount) {
+      toast.error('Please fill in all required fields')
       return
     }
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab.id) return
+    const amount = parseFloat(newOrderForm.amount)
+    const items = newOrderForm.items.split(',').map((i) => i.trim()).filter(Boolean)
 
-    const newContext: ModelContext = {
-      id: `custom-${Date.now()}`,
-      type: 'custom',
-      content: customContext,
-      timestamp: Date.now(),
-      enabled: true
-    }
-
-    chrome.tabs.sendMessage(tab.id, { type: 'add-context', context: newContext })
-    setCustomContext('')
-    toast.success('Custom context added')
-  }
-
-  const toggleContext = async (contextId: string) => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab.id) return
-
-    chrome.tabs.sendMessage(tab.id, { type: 'toggle-context', contextId })
-    
-    setContexts(prev =>
-      prev.map(ctx =>
-        ctx.id === contextId ? { ...ctx, enabled: !ctx.enabled } : ctx
-      )
+    const newOrder = generateNewOrder(
+      newOrderForm.customerName,
+      newOrderForm.email,
+      amount,
+      items.length > 0 ? items : ['Custom Order']
     )
+
+    setInternalAppState((prev) => ({
+      ...prev,
+      orders: [...prev.orders, newOrder],
+    }))
+
+    setNewOrderForm({
+      customerName: '',
+      email: '',
+      amount: '',
+      items: '',
+    })
+
+    toast.success('Order created successfully')
   }
 
-  const getContextIcon = (type: ModelContext['type']) => {
-    switch (type) {
-      case 'page':
-        return <FileText className="w-4 h-4" />
-      case 'selection':
-        return <Cursor className="w-4 h-4" />
-      case 'interaction':
-        return <Mouse className="w-4 h-4" />
-      case 'custom':
-        return <PencilSimple className="w-4 h-4" />
+  const handleCheckout = (orderId: string) => {
+    const order = appState.orders.find((o) => o.id === orderId)
+    if (!order) return
+
+    const checkoutFlag = appState.featureFlags.find((f) => f.name === 'enable_checkout')
+    if (!checkoutFlag?.enabled) {
+      recordFailedEvent(
+        appState,
+        'checkout_attempt',
+        'Checkout feature is disabled',
+        {
+          reason: 'feature_flag_disabled',
+          orderId: order.id,
+          affectedFlags: ['enable_checkout'],
+        }
+      )
+      setInternalAppState({ ...appState })
+      toast.error('Checkout failed: Feature disabled')
+      return
     }
+
+    const highValueRule = appState.businessRules.find((r) => r.id === 'rule_1')
+    if (order.amount > 200 && highValueRule?.enabled) {
+      const hasApprovalPermission = appState.userSession.permissions.includes('approve_orders')
+
+      if (!hasApprovalPermission) {
+        recordFailedEvent(
+          appState,
+          'checkout_attempt',
+          'User lacks permission to approve high-value orders',
+          {
+            reason: 'permission_denied',
+            orderId: order.id,
+            orderAmount: order.amount,
+            affectedRules: ['rule_1'],
+            affectedFlags: ['require_admin_approval'],
+            requiredPermissions: ['approve_orders'],
+            userPermissions: appState.userSession.permissions,
+          }
+        )
+        setInternalAppState({ ...appState })
+        toast.error('Checkout failed: Permission denied for high-value order')
+        return
+      }
+    }
+
+    setInternalAppState((prev) => ({
+      ...prev,
+      orders: prev.orders.map((o) =>
+        o.id === orderId ? { ...o, status: 'completed' as const } : o
+      ),
+    }))
+
+    toast.success('Order completed successfully!')
   }
 
-  const getContextTypeColor = (type: ModelContext['type']) => {
-    switch (type) {
-      case 'page':
-        return 'bg-primary/20 text-primary'
-      case 'selection':
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'completed':
         return 'bg-accent/20 text-accent'
-      case 'interaction':
-        return 'bg-secondary/20 text-secondary-foreground'
-      case 'custom':
-        return 'bg-muted text-muted-foreground'
+      case 'processing':
+        return 'bg-primary/20 text-primary'
+      case 'pending':
+        return 'bg-muted-foreground/20 text-muted-foreground'
+      case 'failed':
+        return 'bg-destructive/20 text-destructive'
     }
   }
-
-  const formatTimestamp = (timestamp: number) => {
-    const now = Date.now()
-    const diff = now - timestamp
-    const seconds = Math.floor(diff / 1000)
-    const minutes = Math.floor(seconds / 60)
-    const hours = Math.floor(minutes / 60)
-
-    if (seconds < 60) return `${seconds}s ago`
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    return new Date(timestamp).toLocaleString()
-  }
-
-  const activeContexts = contexts.filter(ctx => ctx.enabled)
-  const allContextsHistory = [...contexts].reverse()
 
   return (
-    <div className="w-[380px] min-h-[500px] max-h-[600px] bg-background text-foreground">
-      <div className="p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkle className="w-5 h-5 text-accent" weight="fill" />
-          <h1 className="text-lg font-semibold">ModelContext API</h1>
-        </div>
-        {apiAvailable === false && (
-          <Alert className="mt-2">
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              The navigator.modelContext API is not available. Enable the Prompt API in chrome://flags
-            </AlertDescription>
-          </Alert>
-        )}
-        {apiAvailable === true && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            API Available
+    <div className="min-h-screen bg-background">
+      <Toaster position="top-right" />
+      
+      <div className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Self-Diagnosing SaaS Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                WebMCP Demo - Context-Aware Debugging
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <UserCircle size={24} className="text-muted-foreground" />
+              <div className="text-sm">
+                <div className="font-medium">{appState.userSession.userName}</div>
+                <div className="text-xs text-muted-foreground">
+                  Role: {appState.userSession.role}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-        <TabsList className="w-full grid grid-cols-2 m-4 mb-0">
-          <TabsTrigger value="active">
-            Active ({activeContexts.length})
-          </TabsTrigger>
-          <TabsTrigger value="history">
-            <Clock className="w-3 h-3 mr-1" />
-            History
-          </TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="orders" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="orders">
+              <ShoppingCart className="mr-2" size={16} />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="create">
+              <Plus className="mr-2" size={16} />
+              Create Order
+            </TabsTrigger>
+            <TabsTrigger value="admin">
+              <UserCircle className="mr-2" size={16} />
+              Admin Panel
+            </TabsTrigger>
+            <TabsTrigger value="debug">
+              <Code className="mr-2" size={16} />
+              WebMCP Tools
+            </TabsTrigger>
+            <TabsTrigger value="comparison">
+              <ClipboardText className="mr-2" size={16} />
+              Comparison
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="active" className="p-4 space-y-3 mt-0 pt-4">
-          <Card>
-            <CardHeader className="p-3 pb-2">
-              <CardTitle className="text-sm">Add Custom Context</CardTitle>
-              <CardDescription className="text-xs">
-                Provide additional context to the AI model
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-2">
-              <Textarea
-                id="custom-context"
-                placeholder="E.g., 'The user is looking for restaurants in Toronto'"
-                value={customContext}
-                onChange={(e) => setCustomContext(e.target.value)}
-                className="text-sm min-h-[60px] resize-none"
-              />
-              <Button 
-                size="sm" 
-                className="w-full" 
-                onClick={addCustomContext}
-                disabled={!apiAvailable || !customContext.trim()}
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Add Context
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground px-1">
-              Active Contexts
-            </h3>
-            <ScrollArea className="h-[280px]">
-              <AnimatePresence mode="popLayout">
-                {activeContexts.length === 0 ? (
-                  <Card className="p-4">
-                    <p className="text-sm text-muted-foreground text-center">
-                      No active contexts. Interact with the page to generate context.
-                    </p>
-                  </Card>
-                ) : (
-                  activeContexts.map((context) => (
-                    <motion.div
-                      key={context.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <Card className="mb-2 overflow-hidden">
-                        <CardContent className="p-3">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <Badge className={`${getContextTypeColor(context.type)} gap-1 text-xs`}>
-                              {getContextIcon(context.type)}
-                              {context.type}
-                            </Badge>
-                            <Switch
-                              checked={context.enabled}
-                              onCheckedChange={() => toggleContext(context.id)}
-                              className="scale-75"
-                            />
+          <TabsContent value="orders" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Orders</CardTitle>
+                <CardDescription>Manage and process customer orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[500px]">
+                  <div className="space-y-3">
+                    {appState.orders.map((order) => (
+                      <Card key={order.id} className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold">{order.customerName}</h3>
+                              <Badge className={getStatusColor(order.status)}>
+                                {order.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>Email: {order.email}</p>
+                              <p>Amount: ${order.amount.toFixed(2)}</p>
+                              <p>Items: {order.items.join(', ')}</p>
+                              <p className="text-xs">
+                                Created: {new Date(order.createdAt).toLocaleString()}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-xs text-foreground line-clamp-3 mb-1">
-                            {context.content}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {formatTimestamp(context.timestamp)}
-                          </p>
-                        </CardContent>
+                          <div className="flex flex-col gap-2">
+                            {order.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleCheckout(order.id)}
+                              >
+                                <CheckCircle className="mr-1" size={16} />
+                                Checkout
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </Card>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </ScrollArea>
-          </div>
-        </TabsContent>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="history" className="p-4 space-y-2 mt-0 pt-4">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground px-1">
-            Context History
-          </h3>
-          <ScrollArea className="h-[420px]">
-            {allContextsHistory.length === 0 ? (
-              <Card className="p-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  No context history yet.
-                </p>
-              </Card>
-            ) : (
-              allContextsHistory.map((context) => (
-                <Card key={context.id} className={`mb-2 ${!context.enabled && 'opacity-50'}`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <Badge className={`${getContextTypeColor(context.type)} gap-1 text-xs`}>
-                        {getContextIcon(context.type)}
-                        {context.type}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatTimestamp(context.timestamp)}
-                      </span>
+          <TabsContent value="create" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create New Order</CardTitle>
+                <CardDescription>Add a new customer order to the system</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerName">Customer Name *</Label>
+                  <Input
+                    id="customerName"
+                    value={newOrderForm.customerName}
+                    onChange={(e) =>
+                      setNewOrderForm({ ...newOrderForm, customerName: e.target.value })
+                    }
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newOrderForm.email}
+                    onChange={(e) =>
+                      setNewOrderForm({ ...newOrderForm, email: e.target.value })
+                    }
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount ($) *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={newOrderForm.amount}
+                    onChange={(e) =>
+                      setNewOrderForm({ ...newOrderForm, amount: e.target.value })
+                    }
+                    placeholder="99.99"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="items">Items (comma-separated)</Label>
+                  <Input
+                    id="items"
+                    value={newOrderForm.items}
+                    onChange={(e) =>
+                      setNewOrderForm({ ...newOrderForm, items: e.target.value })
+                    }
+                    placeholder="Pro Plan, Support Package"
+                  />
+                </div>
+                <Button onClick={handleCreateOrder} className="w-full">
+                  <Plus className="mr-2" size={16} />
+                  Create Order
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="admin" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Session</CardTitle>
+                  <CardDescription>Current user permissions</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-sm">
+                    <span className="font-medium">User ID:</span> {appState.userSession.userId}
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Role:</span> {appState.userSession.role}
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Permissions:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {appState.userSession.permissions.map((perm) => (
+                        <Badge key={perm} variant="secondary" className="text-xs">
+                          {perm}
+                        </Badge>
+                      ))}
                     </div>
-                    <p className="text-xs text-foreground">
-                      {context.content}
-                    </p>
-                    {context.metadata && Object.keys(context.metadata).length > 0 && (
-                      <div className="mt-2 p-2 bg-muted rounded text-[10px] font-mono">
-                        {JSON.stringify(context.metadata, null, 2)}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Feature Flags</CardTitle>
+                  <CardDescription>Active feature toggles</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2">
+                      {appState.featureFlags.map((flag) => (
+                        <div
+                          key={flag.name}
+                          className="flex items-start justify-between p-2 rounded bg-muted/50"
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{flag.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {flag.description}
+                            </div>
+                          </div>
+                          <Badge variant={flag.enabled ? 'default' : 'secondary'}>
+                            {flag.enabled ? 'ON' : 'OFF'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Warning size={20} className="text-destructive" />
+                    Failed Events
+                  </CardTitle>
+                  <CardDescription>
+                    Recent errors and failures (demonstrates WebMCP debugging)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {appState.failedEvents.length === 0 ? (
+                    <Alert>
+                      <CheckCircle className="h-4 w-4 text-accent" />
+                      <AlertDescription>
+                        No failed events yet. Try checking out a high-value order ($200+) to
+                        trigger a permission error.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <ScrollArea className="h-[300px]">
+                      <div className="space-y-2">
+                        {appState.failedEvents.slice().reverse().map((event) => (
+                          <Card key={event.id} className="p-3 border-destructive/50">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="destructive">{event.eventType}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(event.timestamp).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium">{event.errorMessage}</p>
+                              <div className="text-xs text-muted-foreground">
+                                <div className="font-mono bg-muted p-2 rounded mt-1">
+                                  {JSON.stringify(event.context, null, 2)}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="debug" className="mt-6">
+            <WebMCPPanel appState={appState} />
+          </TabsContent>
+
+          <TabsContent value="comparison" className="mt-6">
+            <ComparisonView appState={appState} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }
