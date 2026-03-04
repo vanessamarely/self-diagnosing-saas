@@ -216,15 +216,30 @@ WebMCP is working correctly if:
 ✅ Bug reproduction provides detailed context  
 ✅ Bug reports include root causes and recommendations  
 
+## 📚 Comprehensive Testing
+
+For a complete testing workflow of all 6 WebMCP tools in the browser console, see:
+
+**[📖 WEBMCP_TEST_GUIDE.md](./WEBMCP_TEST_GUIDE.md)** - Complete browser console testing guide
+
+This guide includes:
+- Detailed test procedures for each of the 6 tools
+- Expected output for every test
+- Native vs Polyfill mode testing
+- Complete test sequence scripts
+- Troubleshooting for common issues
+- Verification checklist
+
 ## 📚 Next Steps
 
 Once you've verified WebMCP is working:
 
-1. **Explore the tools** - Try each tool to see what data it exposes
-2. **Trigger all bugs** - Follow the scenarios in README.md
-3. **Use the console** - Practice calling tools programmatically
-4. **Imagine AI integration** - Think how an AI agent would use these tools
-5. **Read the docs** - Check out WEBMCP_EXAMPLES.md for detailed workflows
+1. **Complete Console Testing** - Follow [WEBMCP_TEST_GUIDE.md](./WEBMCP_TEST_GUIDE.md) to test all tools
+2. **Explore the tools** - Try each tool to see what data it exposes
+3. **Trigger all bugs** - Follow the scenarios in README.md
+4. **Use the console** - Practice calling tools programmatically
+5. **Imagine AI integration** - Think how an AI agent would use these tools
+6. **Read the docs** - Check out WEBMCP_EXAMPLES.md for detailed workflows
 
 ---
 

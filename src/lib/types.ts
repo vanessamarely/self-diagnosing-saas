@@ -78,6 +78,26 @@ declare global {
       }): void
     }
   }
+  
+  interface Window {
+    webMCP?: {
+      tools: {
+        list: () => Array<{
+          name: string
+          description: string
+          inputSchema: {
+            type: string
+            properties?: Record<string, unknown>
+            required?: string[]
+          }
+          handler: (args: Record<string, unknown>) => unknown
+        }>
+        call: (name: string, args?: Record<string, unknown>) => unknown
+      }
+      isSupported: boolean
+      usingPolyfill: boolean
+    }
+  }
 }
 
 export {}

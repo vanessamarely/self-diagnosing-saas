@@ -11,19 +11,19 @@ interface WebMCPToolDefinition {
   handler: (args: Record<string, unknown>) => unknown
 }
 
+interface ModelContextTool {
+  name: string
+  description: string
+  inputSchema: {
+    type: string
+    properties?: Record<string, unknown>
+    required?: string[]
+  }
+  handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
+}
+
 interface ModelContextAPI {
-  provideContext(params: {
-    tools: Array<{
-      name: string
-      description: string
-      inputSchema: {
-        type: string
-        properties?: Record<string, unknown>
-        required?: string[]
-      }
-      handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
-    }>
-  }): void
+  provideContext(tool: ModelContextTool): void
 }
 
 interface NavigatorWithModelContext {
@@ -67,16 +67,20 @@ function syncWebMCPTools() {
     const nav = window.navigator as NavigatorWithModelContext
     
     if (isWebMCPSupported() && nav.modelContext) {
-      nav.modelContext.provideContext({
-        tools: toolDefinitions.map(def => ({
-          name: def.name,
-          description: def.description,
-          inputSchema: def.inputSchema,
-          handler: def.handler
-        }))
-      })
-      console.log('[WebMCP Native] All tools registered via navigator.modelContext.provideContext')
-      console.log('[WebMCP Native] Registered tools:', toolDefinitions.map(t => t.name))
+      try {
+        toolDefinitions.forEach(def => {
+          nav.modelContext!.provideContext({
+            name: def.name,
+            description: def.description,
+            inputSchema: def.inputSchema,
+            handler: def.handler
+          })
+        })
+        console.log('[WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext')
+        console.log('[WebMCP Native] ✓ Registered tools:', toolDefinitions.map(t => t.name))
+      } catch (error) {
+        console.error('[WebMCP Native] ✗ Error registering tools:', error)
+      }
     }
   }
 }
@@ -320,14 +324,25 @@ export function initializeWebMCPTools() {
 
     (window as unknown as { webMCP: WebMCPInterface }).webMCP = webMCP
     
+    console.log('%c=== WebMCP Tools Ready ===', 'color: #6366f1; font-weight: bold; font-size: 14px;')
+    
     if (supported) {
-      console.log('[WebMCP Native] All tools registered via navigator.modelContext.provideContext')
-      console.log('[WebMCP Native] Registered tools:', toolDefinitions.map(t => t.name))
+      console.log('%c✓ Native Mode', 'color: #10b981; font-weight: bold')
+      console.log('Tools registered via navigator.modelContext.provideContext')
     } else {
-      console.warn('[WebMCP Polyfill] navigator.modelContext.provideContext not available')
-      console.warn('[WebMCP Polyfill] Using fallback window.webMCP interface')
-      console.log('[WebMCP Polyfill] Registered tools:', toolDefinitions.map(t => t.name))
-      console.log('[WebMCP Polyfill] Try: window.webMCP.tools.list()')
+      console.log('%c⚠ Polyfill Mode', 'color: #f59e0b; font-weight: bold')
+      console.log('Using window.webMCP fallback (navigator.modelContext not available)')
     }
+    
+    console.log('\n%cRegistered Tools:', 'font-weight: bold')
+    toolDefinitions.forEach((tool, i) => {
+      console.log(`  ${i + 1}. ${tool.name}`)
+    })
+    
+    console.log('\n%cQuick Start:', 'font-weight: bold; color: #6366f1')
+    console.log('  window.webMCP.tools.list()              // List all tools')
+    console.log('  window.webMCP.tools.call(\'get_app_state\')  // Call a tool')
+    console.log('\n%cFor complete testing guide, see: WEBMCP_TEST_GUIDE.md', 'color: #6366f1; font-style: italic')
+    console.log('%c=============================\n', 'color: #6366f1; font-weight: bold')
   }
 }

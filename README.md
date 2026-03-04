@@ -12,6 +12,14 @@ The guide includes:
 - ✅ Step-by-step bug scenarios
 - ✅ Troubleshooting common issues
 
+**→ [WEBMCP_TEST_GUIDE.md](./WEBMCP_TEST_GUIDE.md) ← Complete browser console testing guide**
+
+Comprehensive testing instructions for all 6 WebMCP tools:
+- 🧪 Detailed test procedures for each tool
+- 📊 Expected output for every test case
+- 🔄 Native vs Polyfill mode testing
+- ✅ Complete verification checklist
+
 ## About This Application
 
 ### Is this a React app?
