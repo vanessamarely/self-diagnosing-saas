@@ -12,19 +12,21 @@ interface WebMCPToolDefinition {
 }
 
 interface ModelContextAPI {
-  provideContext(tool: {
-    name: string
-    description: string
-    inputSchema: {
-      type: string
-      properties?: Record<string, unknown>
-      required?: string[]
-    }
-    handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
+  provideContext(params: {
+    tools: Array<{
+      name: string
+      description: string
+      inputSchema: {
+        type: string
+        properties?: Record<string, unknown>
+        required?: string[]
+      }
+      handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
+    }>
   }): void
 }
 
-interface NavigatorWithModelContext extends Navigator {
+interface NavigatorWithModelContext {
   modelContext?: ModelContextAPI
 }
 
@@ -47,8 +49,8 @@ export function setAppState(state: AppState) {
 function isWebMCPSupported(): boolean {
   return typeof window !== 'undefined' && 
          'navigator' in window && 
-         'modelContext' in (window.navigator as NavigatorWithModelContext) &&
-         typeof (window.navigator as NavigatorWithModelContext).modelContext?.provideContext === 'function'
+         'modelContext' in window.navigator &&
+         typeof (window.navigator as unknown as NavigatorWithModelContext).modelContext?.provideContext === 'function'
 }
 
 function registerWebMCPTool(definition: WebMCPToolDefinition) {
@@ -58,18 +60,23 @@ function registerWebMCPTool(definition: WebMCPToolDefinition) {
   } else {
     toolDefinitions.push(definition)
   }
+}
 
+function syncWebMCPTools() {
   if (typeof window !== 'undefined') {
     const nav = window.navigator as NavigatorWithModelContext
     
     if (isWebMCPSupported() && nav.modelContext) {
       nav.modelContext.provideContext({
-        name: definition.name,
-        description: definition.description,
-        inputSchema: definition.inputSchema,
-        handler: definition.handler
+        tools: toolDefinitions.map(def => ({
+          name: def.name,
+          description: def.description,
+          inputSchema: def.inputSchema,
+          handler: def.handler
+        }))
       })
-      console.log(`[WebMCP Native] Registered tool: ${definition.name}`)
+      console.log('[WebMCP Native] All tools registered via navigator.modelContext.provideContext')
+      console.log('[WebMCP Native] Registered tools:', toolDefinitions.map(t => t.name))
     }
   }
 }
@@ -292,6 +299,8 @@ export function initializeWebMCPTools() {
       }
     }
   })
+
+  syncWebMCPTools()
 
   if (typeof window !== 'undefined') {
     const supported = isWebMCPSupported()
