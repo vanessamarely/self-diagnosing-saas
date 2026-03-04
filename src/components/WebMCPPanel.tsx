@@ -6,7 +6,8 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { TouchTooltip } from '@/components/TouchTooltip'
 import { Play, CheckCircle, Warning, Info } from '@phosphor-icons/react'
 import type { AppState, WebMCPTool, WebMCPToolResult } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
@@ -257,53 +258,56 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
               <AccordionContent className="pb-3">
                 <div className="space-y-2">
                   {tools.map((tool) => (
-                    <Tooltip key={tool.name}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="secondary"
-                          className="w-full justify-start gap-2 h-auto py-2 px-3"
-                          onClick={() => handleExecuteTool(tool.name)}
-                          disabled={executingTool !== null}
-                        >
-                          {executingTool === tool.name ? (
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            >
-                              <Play className="text-primary flex-shrink-0" />
-                            </motion.div>
-                          ) : (
-                            <Play className="text-primary flex-shrink-0" />
-                          )}
-                          <div className="flex flex-col items-start text-left">
-                            <span className="font-mono text-xs">{tool.name}</span>
-                            <span className="text-xs text-muted-foreground font-normal">
-                              {tool.description}
-                            </span>
-                          </div>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs p-3" sideOffset={10}>
+                    <TouchTooltip
+                      key={tool.name}
+                      side="left"
+                      sideOffset={10}
+                      className="max-w-xs p-3"
+                      content={
                         <div className="space-y-2">
                           <div>
                             <div className="font-semibold text-xs mb-1">Purpose</div>
-                            <div className="text-xs text-muted-foreground">{tool.tooltip.purpose}</div>
+                            <div className="text-xs text-primary-foreground/90">{tool.tooltip.purpose}</div>
                           </div>
                           <div>
                             <div className="font-semibold text-xs mb-1">When to Use</div>
-                            <div className="text-xs text-muted-foreground">{tool.tooltip.whenToUse}</div>
+                            <div className="text-xs text-primary-foreground/90">{tool.tooltip.whenToUse}</div>
                           </div>
                           <div>
                             <div className="font-semibold text-xs mb-1">Example Use Cases</div>
-                            <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
+                            <ul className="text-xs text-primary-foreground/90 space-y-0.5 list-disc list-inside">
                               {tool.tooltip.examples.map((example, idx) => (
                                 <li key={idx}>{example}</li>
                               ))}
                             </ul>
                           </div>
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
+                      }
+                    >
+                      <Button
+                        variant="secondary"
+                        className="w-full justify-start gap-2 h-auto py-2 px-3"
+                        onClick={() => handleExecuteTool(tool.name)}
+                        disabled={executingTool !== null}
+                      >
+                        {executingTool === tool.name ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          >
+                            <Play className="text-primary flex-shrink-0" />
+                          </motion.div>
+                        ) : (
+                          <Play className="text-primary flex-shrink-0" />
+                        )}
+                        <div className="flex flex-col items-start text-left">
+                          <span className="font-mono text-xs">{tool.name}</span>
+                          <span className="text-xs text-muted-foreground font-normal">
+                            {tool.description}
+                          </span>
+                        </div>
+                      </Button>
+                    </TouchTooltip>
                   ))}
                 </div>
               </AccordionContent>

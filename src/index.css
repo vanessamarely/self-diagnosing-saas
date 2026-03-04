@@ -8,10 +8,17 @@
   
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
   }
   
   .font-mono {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Courier New', monospace;
+  }
+
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
   }
 }
 
