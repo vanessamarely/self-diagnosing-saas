@@ -202,6 +202,14 @@ function App() {
 
           <TabsContent value="orders" className="mt-6">
             <div className="grid grid-cols-1 gap-6">
+              {appState.failedEvents.length === 0 && (
+                <Alert className="border-accent bg-accent/10">
+                  <Info className="h-4 w-4 text-accent" />
+                  <AlertDescription className="text-sm">
+                    <strong>💡 Demo Tip:</strong> Try checking out Bob Smith's order below (over $200) to trigger a permission error and see WebMCP debugging tools in action!
+                  </AlertDescription>
+                </Alert>
+              )}
               <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -266,8 +274,10 @@ function App() {
                           <p className="text-sm">Create your first order in the "Create Order" tab</p>
                         </div>
                       ) : (
-                        appState.orders.map((order) => (
-                          <Card key={order.id} className="p-4">
+                        appState.orders.map((order) => {
+                          const isHighValueDemo = order.amount > 200 && order.status === 'pending' && appState.failedEvents.length === 0
+                          return (
+                          <Card key={order.id} className={`p-4 ${isHighValueDemo ? 'ring-2 ring-accent border-accent bg-accent/5' : ''}`}>
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -279,6 +289,12 @@ function App() {
                                     <Badge variant="outline" className="gap-1 text-primary border-primary/50">
                                       <ShoppingCart size={12} />
                                       In Cart
+                                    </Badge>
+                                  )}
+                                  {isHighValueDemo && (
+                                    <Badge className="gap-1 bg-accent text-accent-foreground">
+                                      <Warning size={12} weight="fill" />
+                                      Try Me!
                                     </Badge>
                                   )}
                                 </div>
@@ -304,7 +320,8 @@ function App() {
                               </div>
                             </div>
                           </Card>
-                        ))
+                          )
+                        })
                       )}
                     </div>
                   </ScrollArea>
@@ -563,21 +580,32 @@ function App() {
                 <CardContent>
                   {appState.failedEvents.length === 0 ? (
                     <div className="space-y-3">
-                      <Alert>
-                        <CheckCircle className="h-4 w-4 text-accent" />
-                        <AlertDescription>
-                          No failed events yet. Try checking out a high-value order ($200+) to
-                          trigger a permission error.
+                      <Alert className="border-accent bg-accent/10">
+                        <Info className="h-4 w-4 text-accent" />
+                        <AlertDescription className="space-y-2">
+                          <p className="font-semibold">How to Trigger Failed Events (Test WebMCP Debugging):</p>
+                          <ol className="text-xs space-y-2 ml-4 list-decimal">
+                            <li>
+                              <strong>Go to "Orders" tab</strong> and find order #2 from Bob Smith ($299.99)
+                            </li>
+                            <li>
+                              <strong>Click "Checkout"</strong> on that high-value order
+                            </li>
+                            <li>
+                              <strong>You'll get a permission error</strong> because your user role lacks "approve_orders" permission for orders over $200
+                            </li>
+                            <li>
+                              <strong>Come back here</strong> to see the failed event with full context, then try the AI Assistant tab!
+                            </li>
+                          </ol>
                         </AlertDescription>
                       </Alert>
                       <Alert className="border-primary bg-primary/10">
                         <Info className="h-4 w-4 text-primary" />
                         <AlertDescription className="text-xs">
-                          <strong>WebMCP Demo Tip:</strong> When failures occur, AI agents can use{' '}
-                          <code className="font-mono bg-muted px-1 rounded">get_failed_events</code>,{' '}
-                          <code className="font-mono bg-muted px-1 rounded">reproduce_bug</code>, and{' '}
-                          <code className="font-mono bg-muted px-1 rounded">generate_bug_report</code>{' '}
-                          to instantly understand root causes without reading code or logs.
+                          <strong>Why This Matters:</strong> Traditional debugging only shows "Checkout failed" with no context. 
+                          WebMCP tools expose the complete internal state, so AI agents can instantly diagnose that 
+                          the issue is a permission conflict (user role vs. business rule requirements) without reading any code.
                         </AlertDescription>
                       </Alert>
                     </div>
