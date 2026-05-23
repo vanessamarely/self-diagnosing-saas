@@ -61,25 +61,25 @@ export function AIAssistant({ appState }: AIAssistantProps) {
       {
         id: '1',
         tool: 'get_app_state',
-        description: 'Analyzing application state...',
+        description: 'Analyzing application state via navigator.modelContext...',
         status: 'pending'
       },
       {
         id: '2',
         tool: 'get_failed_events',
-        description: 'Retrieving failed events...',
+        description: 'Retrieving failed events from WebMCP...',
         status: 'pending'
       },
       {
         id: '3',
         tool: 'reproduce_bug',
-        description: 'Reproducing the issue...',
+        description: 'Reproducing issue with full context...',
         status: 'pending'
       },
       {
         id: '4',
         tool: 'generate_bug_report',
-        description: 'Generating diagnostic report...',
+        description: 'Generating comprehensive report...',
         status: 'pending'
       }
     ]
@@ -277,16 +277,18 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             <Alert className="border-primary bg-primary/10">
               <Robot className="h-4 w-4 text-primary" />
               <AlertDescription className="text-xs">
-                Auto-diagnosis enabled. AI will automatically analyze new failures.
+                <strong>Auto-mode active:</strong> AI will automatically run diagnostics when new failures are detected using WebMCP tools.
               </AlertDescription>
             </Alert>
           )}
 
           {appState.failedEvents.length === 0 && !isAnalyzing && diagnosticSteps.length === 0 && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                No failures detected. Try checking out a high-value order ($200+) to trigger an error.
+            <Alert className="border-accent/30 bg-accent/5">
+              <Info className="h-4 w-4 text-accent" />
+              <AlertDescription className="text-xs space-y-2">
+                <p><strong>WebMCP AI Assistant Demo</strong></p>
+                <p>This AI uses W3C-standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> tools to diagnose issues automatically.</p>
+                <p className="text-muted-foreground">💡 Try checking out Bob Smith's order ($299.99) in the Orders tab to trigger a permission error and see AI diagnostics in action!</p>
               </AlertDescription>
             </Alert>
           )}
@@ -332,18 +334,25 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             Diagnosis Report
           </CardTitle>
           <CardDescription className="text-xs">
-            AI-powered root cause analysis and recommendations
+            AI-powered root cause analysis using W3C WebMCP standard tools
           </CardDescription>
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col gap-3 min-h-0">
           {!diagnosis && diagnosticSteps.length === 0 && (
             <div className="flex-1 flex items-center justify-center text-center p-8">
-              <div className="space-y-3 max-w-sm">
+              <div className="space-y-3 max-w-md">
                 <Robot size={48} className="mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Click "Run Diagnosis" to start automated issue analysis using WebMCP tools
+                <p className="text-sm font-medium">AI-Powered Diagnostics</p>
+                <p className="text-xs text-muted-foreground">
+                  Click "Run Diagnosis" to start automated root cause analysis using standardized W3C WebMCP tools
                 </p>
+                <Alert className="text-left border-primary/30">
+                  <Info className="h-3 w-3" />
+                  <AlertDescription className="text-xs">
+                    <strong>How it works:</strong> The AI calls <code className="font-mono bg-muted px-1 rounded">get_app_state</code>, <code className="font-mono bg-muted px-1 rounded">get_failed_events</code>, <code className="font-mono bg-muted px-1 rounded">reproduce_bug</code>, and <code className="font-mono bg-muted px-1 rounded">generate_bug_report</code> via <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> to understand issues without reading code.
+                  </AlertDescription>
+                </Alert>
               </div>
             </div>
           )}
