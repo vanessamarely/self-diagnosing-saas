@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Code, MagnifyingGlass, Robot, CheckCircle, XCircle, Clock } from '@phosphor-icons/react'
+import { Code, MagnifyingGlass, Robot, CheckCircle, XCircle, Clock, Info } from '@phosphor-icons/react'
 import type { AppState } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
 import { JsonViewer } from './JsonViewer'
@@ -115,6 +115,7 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
   const [activeMethod, setActiveMethod] = useState<'traditional' | 'webmcp'>('traditional')
   const [showWebMCPResult, setShowWebMCPResult] = useState(false)
   const [webmcpResult, setWebmcpResult] = useState<any>(null)
+  const [selectedUseCase, setSelectedUseCase] = useState<'debugging' | 'creative' | 'shopping'>('debugging')
 
   const executeWebMCPDemo = () => {
     setShowWebMCPResult(true)
@@ -133,7 +134,80 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
   }, 0)
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 p-4">
+    <div className="w-full h-full flex flex-col gap-4">
+      <Card className="bg-primary/10 border-primary">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Info className="text-primary" />
+            W3C WebMCP Proposal - Use Cases
+          </CardTitle>
+          <CardDescription>
+            WebMCP enables human-in-the-loop workflows across various domains
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={selectedUseCase} onValueChange={(v) => setSelectedUseCase(v as any)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="debugging">
+                <Code className="mr-2" size={14} />
+                Debugging (This App!)
+              </TabsTrigger>
+              <TabsTrigger value="creative">
+                <Robot className="mr-2" size={14} />
+                Creative Tools
+              </TabsTrigger>
+              <TabsTrigger value="shopping">
+                <MagnifyingGlass className="mr-2" size={14} />
+                E-commerce
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="debugging" className="mt-3">
+              <Alert className="border-accent bg-accent/10">
+                <Robot className="h-4 w-4 text-accent" />
+                <AlertDescription className="text-xs space-y-2">
+                  <p><strong>Scenario:</strong> Developer sees "Checkout failed" error with no details.</p>
+                  <p><strong>Without WebMCP:</strong> Search code, add console.logs, rebuild, test... 44+ minutes</p>
+                  <p><strong>With WebMCP:</strong> Agent calls <code className="font-mono bg-muted px-1 rounded">get_failed_events()</code> and <code className="font-mono bg-muted px-1 rounded">reproduce_bug()</code>, gets complete context in seconds.</p>
+                  <p className="text-primary font-semibold">This application demonstrates this exact use case below! ↓</p>
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+            
+            <TabsContent value="creative" className="mt-3">
+              <Alert className="border-accent bg-accent/10">
+                <Robot className="h-4 w-4 text-accent" />
+                <AlertDescription className="text-xs space-y-2">
+                  <p><strong>Scenario:</strong> Designer using graphic design platform wants "spring themed templates with white background."</p>
+                  <p><strong>WebMCP Tools:</strong></p>
+                  <code className="block font-mono bg-muted px-2 py-1 rounded text-[10px] my-1">
+                    filterTemplates("spring themed, date/time prominent, white background")<br/>
+                    editDesign("Change title font color to red")<br/>
+                    orderPrints(10, "Letter", "Regular")
+                  </code>
+                  <p><strong>Result:</strong> Natural language interface to complex design software, agent and user collaborate in same UI.</p>
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+            
+            <TabsContent value="shopping" className="mt-3">
+              <Alert className="border-accent bg-accent/10">
+                <Robot className="h-4 w-4 text-accent" />
+                <AlertDescription className="text-xs space-y-2">
+                  <p><strong>Scenario:</strong> Shopper asks "Show dresses in my size appropriate for cocktail-attire wedding."</p>
+                  <p><strong>WebMCP Tools:</strong></p>
+                  <code className="block font-mono bg-muted px-2 py-1 rounded text-[10px] my-1">
+                    getDresses(size: 6)<br/>
+                    showDresses([4320, 8492, 5532, ...])
+                  </code>
+                  <p><strong>Result:</strong> Agent filters hundreds of products using natural language criteria, updates UI for user review.</p>
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Debugging Comparison</h2>

@@ -51,11 +51,20 @@ You can verify this by checking `package.json` or looking at `src/App.tsx` and `
 
 ## What is WebMCP?
 
-WebMCP (Model Context Protocol for the Browser) is a **web standard proposal** that allows web applications to expose their internal functionality as "tools" that can be invoked by AI agents, browser assistants, and assistive technologies.
+WebMCP (Model Context Protocol for the Browser) is a **W3C web standard proposal** that allows web applications to expose their internal functionality as "tools" that can be invoked by AI agents, browser assistants, and assistive technologies.
 
-###WebMCP Official Documentation:
-- Main Proposal: https://github.com/webmachinelearning/webmcp
-- Implementation (MCP-B): https://github.com/WebMCP-org
+### WebMCP Official Documentation:
+- **W3C Proposal**: https://github.com/webmachinelearning/webmcp
+- **Proposal Document**: https://github.com/webmachinelearning/webmcp/blob/main/proposal.md
+- **WebMCP Organization**: https://github.com/WebMCP-org
+
+### Key Concepts from W3C Proposal
+
+**Agent**: An autonomous assistant (typically LLM-based) that can understand user goals and take actions to achieve them.
+
+**Tools**: JavaScript functions with natural language descriptions and structured schemas that can be invoked by agents.
+
+**Human-in-the-Loop**: WebMCP enables cooperative workflows where users and agents work together within the same web interface, leveraging existing application logic while maintaining shared context and user control.
 
 ### How WebMCP Works
 
@@ -257,12 +266,27 @@ window.webMCP.tools.call('add_item_to_cart', {
 - **Complex bugs** involving multiple systems are instantly traceable
 - **Human-in-the-loop** workflows where users and agents collaborate
 
-## WebMCP Use Cases (from official docs)
+## WebMCP Use Cases (from W3C proposal)
 
-1. **Creative Workflows** - AI helps with complex UIs (design tools, photo editors)
-2. **Shopping** - AI filters and suggests products based on natural language
-3. **Code Review** - AI navigates complex interfaces and automates repetitive tasks
-4. **Debugging** - This demo! AI diagnoses bugs using internal app context
+The W3C proposal outlines several key use cases for WebMCP:
+
+### 1. Creative Workflows (Design Tools)
+A user working in a graphic design platform asks their browser agent to "show me templates that are spring themed with prominent date/time on white background." The agent uses the platform's `filterTemplates(description)` tool to update the UI, then helps with editing using an `editDesign(instructions)` tool.
+
+### 2. Shopping (E-commerce)
+A user browsing an online store asks their agent to "show only dresses in my size appropriate for cocktail-attire." The agent calls the store's `getDresses(size, color)` and `showDresses(product_ids)` tools to filter results using natural language.
+
+### 3. Code Review (Development Tools)
+A developer opens a code review and asks "Why are the Mac and Android bots failing?" The agent uses `getTryRunStatuses()` and `getTryRunFailureSnippet(bot_name)` tools to diagnose the issue and even suggest fixes.
+
+### 4. Debugging (This Demo!)
+**This application demonstrates WebMCP for debugging!** When checkout fails, instead of reading through code and logs, an AI agent can call `get_failed_events()` and `reproduce_bug()` to instantly understand the root cause with complete business context.
+
+### Key Benefits
+- **Enables human-in-the-loop workflows**: Users work directly through delegating tasks to AI agents while maintaining visibility and control
+- **Simplifies AI integration**: AI agents interact through well-defined tools instead of fragile UI actuation
+- **Minimizes developer burden**: Reuse existing JavaScript code - any task users can do can be made into a tool
+- **Improves accessibility**: Assistive technologies can access functionality beyond traditional accessibility trees
 
 ## Technical Architecture
 
@@ -294,16 +318,37 @@ npm run dev
 npm run build
 ```
 
-## Differences from Standard MCP
+## Differences from Backend MCP
 
-**MCP (Model Context Protocol)** typically runs as a backend server (Python/Node.js) that AI platforms connect to.
+**Backend MCP (Model Context Protocol)** typically runs as a server (Python/Node.js) that AI platforms connect to directly:
+- Agent ↔ MCP Server ↔ Backend Service
+- No UI required
+- Server-to-server communication
+- Fully autonomous workflows
 
-**WebMCP** runs in the browser and:
+**WebMCP (Web MCP)** runs in the browser with a live UI:
+- Agent ↔ Browser ↔ Web Page (with UI visible to user)
 - Uses JavaScript instead of Python/Node backends
 - Shares UI context with the user (human-in-the-loop)
 - Tools execute in the same environment as the web app
 - No server setup required - just add to your frontend code
 - Perfect for scenarios where users and agents collaborate in the same interface
+- Users can see agent actions in real-time and intervene
+
+### When to Use Each
+
+**Use Backend MCP when:**
+- No UI needed (headless operations)
+- Fully autonomous agent workflows
+- Backend-only logic and data access
+- Server-to-server integration required
+
+**Use WebMCP when:**
+- Users and agents collaborate in the same UI
+- Visual feedback is important
+- Leveraging existing frontend code
+- Human-in-the-loop workflows
+- Simplifying integration for web-first services
 
 ## Future Enhancements
 
