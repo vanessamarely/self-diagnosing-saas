@@ -17,6 +17,7 @@ import {
   Plus,
   Code,
   Robot,
+  Info,
 } from '@phosphor-icons/react'
 import type { AppState, Order } from '@/lib/types'
 import { createInitialState, generateNewOrder, recordFailedEvent } from '@/lib/state'
@@ -200,51 +201,116 @@ function App() {
           </TabsList>
 
           <TabsContent value="orders" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Orders</CardTitle>
-                <CardDescription>Manage and process customer orders</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-3">
-                    {appState.orders.map((order) => (
-                      <Card key={order.id} className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold">{order.customerName}</h3>
-                              <Badge className={getStatusColor(order.status)}>
-                                {order.status}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <p>Email: {order.email}</p>
-                              <p>Amount: ${order.amount.toFixed(2)}</p>
-                              <p>Items: {order.items.join(', ')}</p>
-                              <p className="text-xs">
-                                Created: {new Date(order.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            {order.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleCheckout(order.id)}
-                              >
-                                <CheckCircle className="mr-1" size={16} />
-                                Checkout
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="text-primary" size={24} />
+                    Active Shopping Cart
+                  </CardTitle>
+                  <CardDescription>Pending orders awaiting checkout</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="space-y-1">
+                      <div className="text-3xl font-bold text-primary">
+                        {appState.orders.filter(o => o.status === 'pending').length}
+                      </div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Items in Cart
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-bold text-primary">
+                        ${appState.orders
+                          .filter(o => o.status === 'pending')
+                          .reduce((sum, o) => sum + o.amount, 0)
+                          .toFixed(2)}
+                      </div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Cart Total
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-3xl font-bold text-accent">
+                        {appState.orders.filter(o => o.status === 'completed').length}
+                      </div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Completed
+                      </div>
+                    </div>
                   </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                  <Separator className="my-4" />
+                  <Alert className="bg-card/50 border-primary/30">
+                    <Info size={16} />
+                    <AlertDescription className="text-xs">
+                      <strong>WebMCP Tip:</strong> Use the <code className="font-mono bg-muted px-1 rounded">get_active_cart</code> tool 
+                      in the WebMCP Tools tab to see detailed cart data in JSON format.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Orders</CardTitle>
+                  <CardDescription>View and manage all customer orders</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-3">
+                      {appState.orders.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <ShoppingCart size={48} className="mx-auto mb-3 opacity-50" />
+                          <p className="font-medium">No orders yet</p>
+                          <p className="text-sm">Create your first order in the "Create Order" tab</p>
+                        </div>
+                      ) : (
+                        appState.orders.map((order) => (
+                          <Card key={order.id} className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold">{order.customerName}</h3>
+                                  <Badge className={getStatusColor(order.status)}>
+                                    {order.status}
+                                  </Badge>
+                                  {order.status === 'pending' && (
+                                    <Badge variant="outline" className="gap-1 text-primary border-primary/50">
+                                      <ShoppingCart size={12} />
+                                      In Cart
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  <p>Email: {order.email}</p>
+                                  <p>Amount: ${order.amount.toFixed(2)}</p>
+                                  <p>Items: {order.items.join(', ')}</p>
+                                  <p className="text-xs">
+                                    Created: {new Date(order.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                {order.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleCheckout(order.id)}
+                                  >
+                                    <CheckCircle className="mr-1" size={16} />
+                                    Checkout
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="create" className="mt-6">
