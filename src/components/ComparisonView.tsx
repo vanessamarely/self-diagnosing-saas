@@ -117,9 +117,9 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
   const [webmcpResult, setWebmcpResult] = useState<any>(null)
   const [selectedUseCase, setSelectedUseCase] = useState<'debugging' | 'creative' | 'shopping'>('debugging')
 
-  const executeWebMCPDemo = () => {
+  const executeWebMCPDemo = async () => {
     setShowWebMCPResult(true)
-    const result = executeTool('reproduce_bug', appState)
+    const result = await executeTool('reproduce_bug', appState)
     setWebmcpResult(result.data)
   }
 

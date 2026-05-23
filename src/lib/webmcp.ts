@@ -84,7 +84,7 @@ function syncWebMCPTools() {
   }
 }
 
-export function executeTool(name: WebMCPTool, state: AppState): WebMCPToolResult {
+export async function executeTool(name: WebMCPTool, state: AppState): Promise<WebMCPToolResult> {
   setAppState(state)
   
   const tool = toolDefinitions.find(t => t.name === name)
@@ -93,10 +93,8 @@ export function executeTool(name: WebMCPTool, state: AppState): WebMCPToolResult
     throw new Error(`Tool ${name} not registered`)
   }
 
-  const resultPromise = tool.execute({})
-  const data = resultPromise instanceof Promise ? 
-    resultPromise.then(r => JSON.parse(r.content[0].text)) :
-    resultPromise
+  const result = await tool.execute({})
+  const data = JSON.parse(result.content[0].text)
   
   return {
     tool: name,

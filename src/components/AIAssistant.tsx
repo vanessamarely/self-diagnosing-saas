@@ -90,7 +90,7 @@ export function AIAssistant({ appState }: AIAssistantProps) {
       await new Promise(resolve => setTimeout(resolve, 800))
       
       try {
-        const result = executeTool(step.tool as any, appState)
+        const result = await executeTool(step.tool as any, appState)
         
         setDiagnosticSteps(prev => 
           prev.map(s => 

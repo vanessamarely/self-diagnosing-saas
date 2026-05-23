@@ -180,7 +180,7 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
     await new Promise(resolve => setTimeout(resolve, 300))
     
     try {
-      const toolResult = executeTool(toolName, appState)
+      const toolResult = await executeTool(toolName, appState)
       setResult(toolResult)
     } catch (error) {
       setResult({
