@@ -34,6 +34,7 @@ interface WebMCPInterface {
   }
   isSupported: boolean
   usingPolyfill: boolean
+  implementationMode: 'declarative' | 'polyfill'
 }
 
 let appStateRef: AppState | null = null
@@ -75,11 +76,12 @@ function syncWebMCPTools() {
         tools: toolDefinitions
       })
       
-      console.log('[WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext')
-      console.log('[WebMCP Native] ✓ Registered tools:', toolDefinitions.map(t => t.name))
+      console.log('[WebMCP Declarative] ✓ Tools registered via navigator.modelContext.provideContext')
+      console.log('[WebMCP Declarative] ✓ Implementation: DECLARATIVE (Recommended by W3C)')
+      console.log('[WebMCP Declarative] ✓ Registered tools:', toolDefinitions.map(t => t.name))
     } catch (error) {
-      console.error('[WebMCP Native] ✗ Error registering tools:', error)
-      console.error('[WebMCP Native] ✗ Error details:', error instanceof Error ? error.message : String(error))
+      console.error('[WebMCP Declarative] ✗ Error registering tools:', error)
+      console.error('[WebMCP Declarative] ✗ Error details:', error instanceof Error ? error.message : String(error))
     }
   }
 }
@@ -659,7 +661,8 @@ export function initializeWebMCPTools() {
         }
       },
       isSupported: supported,
-      usingPolyfill: !supported
+      usingPolyfill: !supported,
+      implementationMode: supported ? 'declarative' : 'polyfill'
     };
 
     (window as unknown as { webMCP: WebMCPInterface }).webMCP = webMCP
@@ -667,11 +670,13 @@ export function initializeWebMCPTools() {
     console.log('%c=== WebMCP Tools Ready ===', 'color: #6366f1; font-weight: bold; font-size: 14px;')
     
     if (supported) {
-      console.log('%c✓ Native Mode', 'color: #10b981; font-weight: bold')
-      console.log('Tools registered via navigator.modelContext.provideContext')
+      console.log('%c✓ DECLARATIVE Mode (W3C Standard)', 'color: #10b981; font-weight: bold')
+      console.log('Implementation: navigator.modelContext.provideContext (Recommended)')
+      console.log('Tools registered declaratively - all tools provided at once')
     } else {
-      console.log('%c⚠ Polyfill Mode', 'color: #f59e0b; font-weight: bold')
+      console.log('%c⚠ POLYFILL Mode', 'color: #f59e0b; font-weight: bold')
       console.log('Using window.webMCP fallback (navigator.modelContext not available)')
+      console.log('Note: Native WebMCP API is not supported in this browser')
     }
     
     console.log('\n%cRegistered Tools:', 'font-weight: bold')
@@ -680,8 +685,12 @@ export function initializeWebMCPTools() {
     })
     
     console.log('\n%cQuick Start:', 'font-weight: bold; color: #6366f1')
-    console.log('  window.webMCP.tools.list()              // List all tools')
-    console.log('  window.webMCP.tools.call(\'get_app_state\')  // Call a tool')
+    console.log('  window.webMCP.tools.list()                    // List all tools')
+    console.log('  window.webMCP.tools.call(\'get_app_state\')      // Call a tool')
+    console.log('  window.webMCP.implementationMode              // Check mode')
+    console.log('\n%cImplementation Modes:', 'font-weight: bold; color: #6366f1')
+    console.log('  • DECLARATIVE: Tools registered via provideContext() - All at once')
+    console.log('  • IMPERATIVE: Tools registered via registerTool() - One at a time (not used)')
     console.log('\n%cFor complete testing guide, see: WEBMCP_TEST_GUIDE.md', 'color: #6366f1; font-style: italic')
     console.log('%c=============================\n', 'color: #6366f1; font-weight: bold')
   }
