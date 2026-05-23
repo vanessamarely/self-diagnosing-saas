@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Code, MagnifyingGlass, Robot, CheckCircle, XCircle, Clock, Info } from '@phosphor-icons/react'
+import { Code, MagnifyingGlass, Robot, CheckCircle, XCircle, Clock, Info, BookOpen } from '@phosphor-icons/react'
 import type { AppState } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
 import { JsonViewer } from './JsonViewer'
@@ -150,8 +150,28 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
             <Info className="text-primary" />
             W3C WebMCP Proposal - Use Cases
           </CardTitle>
-          <CardDescription>
-            WebMCP enables human-in-the-loop workflows across various domains
+          <CardDescription className="flex items-center justify-between">
+            <span>WebMCP enables human-in-the-loop workflows across various domains</span>
+            <div className="flex items-center gap-2 text-xs">
+              <BookOpen size={14} className="text-primary" />
+              <a 
+                href="https://github.com/webmachinelearning/webmcp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors underline"
+              >
+                Official Spec
+              </a>
+              <span className="text-muted-foreground">•</span>
+              <a 
+                href="https://modelcontextprotocol.io" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors underline"
+              >
+                MCP Docs
+              </a>
+            </div>
           </CardDescription>
         </CardHeader>
         <CardContent>

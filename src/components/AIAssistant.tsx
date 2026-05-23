@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Brain, Robot, Sparkle, CheckCircle, Warning, Info, Play } from '@phosphor-icons/react'
+import { Brain, Robot, Sparkle, CheckCircle, Warning, Info, Play, BookOpen } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { AppState } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
@@ -289,6 +289,42 @@ export function AIAssistant({ appState }: AIAssistantProps) {
                 <p><strong>W3C WebMCP AI Assistant</strong></p>
                 <p>This AI uses the W3C standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API to call debugging tools and diagnose issues automatically.</p>
                 <p className="text-muted-foreground">💡 Try checking out Bob Smith's order ($299.99) in the Orders tab to trigger a permission error and see AI diagnostics in action!</p>
+                <Separator className="my-2" />
+                <div className="space-y-1">
+                  <div className="font-semibold flex items-center gap-1 text-primary">
+                    <BookOpen size={14} />
+                    Learn More
+                  </div>
+                  <div className="space-y-0.5 pl-1">
+                    <a 
+                      href="https://github.com/webmachinelearning/webmcp" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors text-[10px]"
+                    >
+                      <span>→</span>
+                      <span>Official W3C WebMCP Proposal</span>
+                    </a>
+                    <a 
+                      href="https://github.com/WebMCP-org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors text-[10px]"
+                    >
+                      <span>→</span>
+                      <span>WebMCP Organization</span>
+                    </a>
+                    <a 
+                      href="https://modelcontextprotocol.io" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors text-[10px]"
+                    >
+                      <span>→</span>
+                      <span>Model Context Protocol</span>
+                    </a>
+                  </div>
+                </div>
               </AlertDescription>
             </Alert>
           )}

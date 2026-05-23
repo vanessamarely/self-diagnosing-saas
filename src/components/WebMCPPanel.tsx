@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { TouchTooltip } from '@/components/TouchTooltip'
-import { Play, CheckCircle, Warning, Info } from '@phosphor-icons/react'
+import { Play, CheckCircle, Warning, Info, BookOpen } from '@phosphor-icons/react'
 import type { AppState, WebMCPTool, WebMCPToolResult } from '@/lib/types'
 import { executeTool } from '@/lib/webmcp'
 import { JsonViewer } from './JsonViewer'
@@ -320,6 +320,42 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
                     </div>
                   </div>
                 )}
+                <Separator className="my-2" />
+                <div className="space-y-1">
+                  <div className="font-semibold flex items-center gap-1 text-primary">
+                    <BookOpen size={14} />
+                    WebMCP Documentation
+                  </div>
+                  <div className="space-y-1 pl-1">
+                    <a 
+                      href="https://github.com/webmachinelearning/webmcp" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                    >
+                      <span className="text-[10px]">→</span>
+                      <span>Official W3C WebMCP Proposal</span>
+                    </a>
+                    <a 
+                      href="https://github.com/WebMCP-org" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                    >
+                      <span className="text-[10px]">→</span>
+                      <span>WebMCP Organization (Examples)</span>
+                    </a>
+                    <a 
+                      href="https://modelcontextprotocol.io" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                    >
+                      <span className="text-[10px]">→</span>
+                      <span>Model Context Protocol (MCP)</span>
+                    </a>
+                  </div>
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
