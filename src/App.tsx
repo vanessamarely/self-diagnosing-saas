@@ -641,3 +641,33 @@ function App() {
 }
 
 export default App
+
+                            </Card>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ai" className="mt-6">
+            <AIAssistant appState={appState} />
+          </TabsContent>
+
+          <TabsContent value="debug" className="mt-6">
+            <WebMCPPanel appState={appState} />
+          </TabsContent>
+
+          <TabsContent value="comparison" className="mt-6">
+            <ComparisonView appState={appState} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  )
+}
+
+export default App
