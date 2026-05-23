@@ -56,6 +56,8 @@ export type WebMCPTool =
   | 'get_failed_events'
   | 'reproduce_bug'
   | 'generate_bug_report'
+  | 'get_active_cart'
+  | 'add_item_to_cart'
 
 export interface WebMCPToolResult {
   tool: WebMCPTool

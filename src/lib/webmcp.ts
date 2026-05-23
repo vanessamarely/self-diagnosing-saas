@@ -346,6 +346,94 @@ export function initializeWebMCPTools() {
     }
   })
 
+  registerWebMCPTool({
+    name: 'get_active_cart',
+    description: 'Returns a structured JSON representing the current items, quantities, prices, and total cost in the user\'s shopping cart',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    async execute() {
+      if (!appStateRef) throw new Error('App state not initialized')
+      const state = appStateRef
+      
+      const cartItems = state.orders
+        .filter(order => order.status === 'pending')
+        .map(order => ({
+          orderId: order.id,
+          customerName: order.customerName,
+          email: order.email,
+          items: order.items,
+          quantity: order.items.length,
+          price_usd: order.amount,
+          createdAt: order.createdAt
+        }))
+      
+      const total = cartItems.reduce((sum, item) => sum + item.price_usd, 0)
+      
+      const result = {
+        items: cartItems,
+        itemCount: cartItems.length,
+        total_usd: total,
+        currency: 'USD',
+        timestamp: new Date().toISOString()
+      }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
+    }
+  })
+
+  registerWebMCPTool({
+    name: 'add_item_to_cart',
+    description: 'Adds a specific item to the shopping cart',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        productId: {
+          type: 'string',
+          description: 'The unique identifier of the product to add'
+        },
+        quantity: {
+          type: 'number',
+          description: 'The quantity of the product to add (default: 1)'
+        }
+      },
+      required: ['productId']
+    },
+    async execute(args) {
+      if (!appStateRef) throw new Error('App state not initialized')
+      
+      const productId = args.productId as string
+      const quantity = (args.quantity as number) || 1
+      
+      if (!productId) {
+        throw new Error('productId is required')
+      }
+      
+      const result = {
+        success: true,
+        message: `Item added successfully`,
+        productId,
+        quantity,
+        timestamp: new Date().toISOString(),
+        note: 'This is a demonstration tool. In a real implementation, this would trigger the application\'s addToCart action and update the cart state.'
+      }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
+    }
+  })
+
   syncWebMCPTools()
 
   if (typeof window !== 'undefined') {

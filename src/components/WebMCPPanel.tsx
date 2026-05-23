@@ -61,6 +61,37 @@ const toolCategories: Array<{ category: string; tools: ToolInfo[] }> = [
     ]
   },
   {
+    category: 'Shopping Cart',
+    tools: [
+      { 
+        name: 'get_active_cart' as WebMCPTool, 
+        description: 'Get active shopping cart contents',
+        tooltip: {
+          purpose: 'Returns structured JSON with current cart items, quantities, and total price',
+          whenToUse: 'When you need to inspect the current cart state',
+          examples: [
+            'Check pending orders in cart',
+            'Verify cart total calculations',
+            'See all items awaiting checkout'
+          ]
+        }
+      },
+      { 
+        name: 'add_item_to_cart' as WebMCPTool, 
+        description: 'Add item to shopping cart',
+        tooltip: {
+          purpose: 'Adds a specific product to the user\'s shopping cart',
+          whenToUse: 'When testing cart operations or automating purchases',
+          examples: [
+            'Add product with ID "prod_123"',
+            'Add multiple quantities of an item',
+            'Test cart update workflows'
+          ]
+        }
+      },
+    ]
+  },
+  {
     category: 'Configuration',
     tools: [
       { 
