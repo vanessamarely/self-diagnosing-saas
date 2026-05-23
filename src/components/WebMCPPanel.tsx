@@ -215,8 +215,8 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
               </CardTitle>
               <CardDescription className="text-sm mt-1">
                 {webmcpStatus.isSupported 
-                  ? 'Using navigator.modelContext.provideContext'
-                  : 'navigator.modelContext not available - using fallback'
+                  ? 'W3C Standard: navigator.modelContext API'
+                  : 'Polyfill Mode: window.webMCP fallback'
                 }
               </CardDescription>
             </div>
@@ -228,8 +228,8 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              <strong>WebMCP Status:</strong> This browser doesn't support <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> yet. 
-              Tools are available via <code className="font-mono bg-muted px-1 rounded">window.webMCP</code> polyfill.
+              <strong>W3C WebMCP Polyfill Active:</strong> This browser doesn't support the W3C standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API yet. 
+              Tools are available via <code className="font-mono bg-muted px-1 rounded">window.webMCP</code> compatibility layer.
             </AlertDescription>
           </Alert>
         )}
@@ -237,37 +237,37 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
         <Accordion type="multiple" defaultValue={['instructions']} className="flex-shrink-0">
           <AccordionItem value="instructions" className="border rounded-lg px-4 bg-card/30">
             <AccordionTrigger className="text-sm font-semibold hover:no-underline py-3">
-              How to Test WebMCP
+              W3C WebMCP Testing Guide
             </AccordionTrigger>
             <AccordionContent className="pb-3">
               <div className="text-xs text-muted-foreground space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="font-semibold flex-shrink-0">1.</span>
                   <div>
-                    <span className="font-semibold">Click a tool button below</span>
-                    <span className="block text-muted-foreground/80">View structured JSON responses</span>
+                    <span className="font-semibold">Test via UI</span>
+                    <span className="block text-muted-foreground/80">Click tool buttons below to execute and view JSON responses</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-semibold flex-shrink-0">2.</span>
                   <div>
-                    <span className="font-semibold">Open browser console</span>
+                    <span className="font-semibold">Test via Console</span>
                     <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.list()</code>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-semibold flex-shrink-0">3.</span>
                   <div>
-                    <span className="font-semibold">Call tools directly</span>
-                    <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">window.webMCP.tools.call('get_app_state')</code>
+                    <span className="font-semibold">Call tools programmatically</span>
+                    <code className="block font-mono bg-muted px-1 py-0.5 rounded text-[10px] mt-0.5">await window.webMCP.tools.call('get_app_state')</code>
                   </div>
                 </div>
                 {webmcpStatus.isSupported && (
                   <div className="flex items-start gap-2">
                     <span className="font-semibold flex-shrink-0">4.</span>
                     <div>
-                      <span className="font-semibold">Native API available</span>
-                      <span className="block text-accent mt-0.5">Tools registered via navigator.modelContext ✓</span>
+                      <span className="font-semibold">W3C Native Mode Active</span>
+                      <span className="block text-accent mt-0.5">Tools registered via navigator.modelContext.provideContext() ✓</span>
                     </div>
                   </div>
                 )}

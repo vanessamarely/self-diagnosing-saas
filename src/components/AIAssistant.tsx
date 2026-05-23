@@ -61,25 +61,25 @@ export function AIAssistant({ appState }: AIAssistantProps) {
       {
         id: '1',
         tool: 'get_app_state',
-        description: 'Analyzing application state via navigator.modelContext...',
+        description: 'Calling get_app_state via W3C WebMCP API...',
         status: 'pending'
       },
       {
         id: '2',
         tool: 'get_failed_events',
-        description: 'Retrieving failed events from WebMCP...',
+        description: 'Calling get_failed_events to retrieve error logs...',
         status: 'pending'
       },
       {
         id: '3',
         tool: 'reproduce_bug',
-        description: 'Reproducing issue with full context...',
+        description: 'Calling reproduce_bug for detailed analysis...',
         status: 'pending'
       },
       {
         id: '4',
         tool: 'generate_bug_report',
-        description: 'Generating comprehensive report...',
+        description: 'Calling generate_bug_report for recommendations...',
         status: 'pending'
       }
     ]
@@ -232,7 +232,7 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             </Badge>
           </div>
           <CardDescription className="text-xs">
-            Automated issue detection using WebMCP tools
+            W3C WebMCP tools via navigator.modelContext
           </CardDescription>
         </CardHeader>
 
@@ -277,7 +277,7 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             <Alert className="border-primary bg-primary/10">
               <Robot className="h-4 w-4 text-primary" />
               <AlertDescription className="text-xs">
-                <strong>Auto-mode active:</strong> AI will automatically run diagnostics when new failures are detected using WebMCP tools.
+                <strong>Auto-mode active:</strong> AI will automatically run diagnostics when new failures are detected using W3C WebMCP tools.
               </AlertDescription>
             </Alert>
           )}
@@ -286,8 +286,8 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             <Alert className="border-accent/30 bg-accent/5">
               <Info className="h-4 w-4 text-accent" />
               <AlertDescription className="text-xs space-y-2">
-                <p><strong>WebMCP AI Assistant Demo</strong></p>
-                <p>This AI uses W3C-standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> tools to diagnose issues automatically.</p>
+                <p><strong>W3C WebMCP AI Assistant</strong></p>
+                <p>This AI uses the W3C standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API to call debugging tools and diagnose issues automatically.</p>
                 <p className="text-muted-foreground">💡 Try checking out Bob Smith's order ($299.99) in the Orders tab to trigger a permission error and see AI diagnostics in action!</p>
               </AlertDescription>
             </Alert>
@@ -334,7 +334,7 @@ export function AIAssistant({ appState }: AIAssistantProps) {
             Diagnosis Report
           </CardTitle>
           <CardDescription className="text-xs">
-            AI-powered root cause analysis using W3C WebMCP standard tools
+            AI-powered root cause analysis via W3C WebMCP API
           </CardDescription>
         </CardHeader>
 
@@ -345,12 +345,12 @@ export function AIAssistant({ appState }: AIAssistantProps) {
                 <Robot size={48} className="mx-auto text-muted-foreground" />
                 <p className="text-sm font-medium">AI-Powered Diagnostics</p>
                 <p className="text-xs text-muted-foreground">
-                  Click "Run Diagnosis" to start automated root cause analysis using standardized W3C WebMCP tools
+                  Click "Run Diagnosis" to start automated root cause analysis using W3C WebMCP standard
                 </p>
                 <Alert className="text-left border-primary/30">
                   <Info className="h-3 w-3" />
                   <AlertDescription className="text-xs">
-                    <strong>How it works:</strong> The AI calls <code className="font-mono bg-muted px-1 rounded">get_app_state</code>, <code className="font-mono bg-muted px-1 rounded">get_failed_events</code>, <code className="font-mono bg-muted px-1 rounded">reproduce_bug</code>, and <code className="font-mono bg-muted px-1 rounded">generate_bug_report</code> via <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> to understand issues without reading code.
+                    <strong>How it works:</strong> The AI calls debugging tools (<code className="font-mono bg-muted px-1 rounded">get_app_state</code>, <code className="font-mono bg-muted px-1 rounded">get_failed_events</code>, <code className="font-mono bg-muted px-1 rounded">reproduce_bug</code>, <code className="font-mono bg-muted px-1 rounded">generate_bug_report</code>) via the W3C <code className="font-mono bg-muted px-1 rounded">navigator.modelContext.provideContext()</code> API to diagnose issues without reading code.
                   </AlertDescription>
                 </Alert>
               </div>
