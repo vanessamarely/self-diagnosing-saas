@@ -18,6 +18,9 @@ import {
   Code,
   Robot,
   Info,
+  Trash,
+  PencilSimple,
+  X,
 } from '@phosphor-icons/react'
 import type { AppState, Order } from '@/lib/types'
 import { createInitialState, generateNewOrder, recordFailedEvent } from '@/lib/state'
@@ -35,6 +38,7 @@ function App() {
     amount: '',
     items: '',
   })
+  const [editingAmount, setEditingAmount] = useState<{ orderId: string; amount: string } | null>(null)
 
   useEffect(() => {
     initializeWebMCPTools()
@@ -132,6 +136,68 @@ function App() {
     toast.success('Order completed successfully!')
   }
 
+  const handleRemoveFromCart = async (orderId: string) => {
+    try {
+      const result = await (window as any).webMCP.tools.call('remove_item_from_cart', { orderId })
+      
+      if (result.success) {
+        setInternalAppState((prev) => ({
+          ...prev,
+          orders: prev.orders.filter((o) => o.id !== orderId)
+        }))
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Failed to remove item from cart')
+      console.error(error)
+    }
+  }
+
+  const handleClearCart = async () => {
+    try {
+      const result = await (window as any).webMCP.tools.call('clear_cart')
+      
+      if (result.success) {
+        setInternalAppState((prev) => ({
+          ...prev,
+          orders: prev.orders.filter((o) => o.status !== 'pending')
+        }))
+        toast.success(`${result.removedCount} item(s) removed from cart`)
+      } else {
+        toast.info(result.message)
+      }
+    } catch (error) {
+      toast.error('Failed to clear cart')
+      console.error(error)
+    }
+  }
+
+  const handleUpdateQuantity = async (orderId: string, newAmount: number) => {
+    try {
+      const result = await (window as any).webMCP.tools.call('update_cart_quantity', { 
+        orderId, 
+        newAmount 
+      })
+      
+      if (result.success) {
+        setInternalAppState((prev) => ({
+          ...prev,
+          orders: prev.orders.map((o) =>
+            o.id === orderId ? { ...o, amount: newAmount } : o
+          )
+        }))
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Failed to update cart item')
+      console.error(error)
+    }
+  }
+
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'completed':
@@ -212,11 +278,26 @@ function App() {
               )}
               <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ShoppingCart className="text-primary" size={24} />
-                    Active Shopping Cart
-                  </CardTitle>
-                  <CardDescription>Pending orders awaiting checkout</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart className="text-primary" size={24} />
+                        Active Shopping Cart
+                      </CardTitle>
+                      <CardDescription>Pending orders awaiting checkout</CardDescription>
+                    </div>
+                    {appState.orders.filter(o => o.status === 'pending').length > 0 && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleClearCart}
+                        className="gap-1"
+                      >
+                        <Trash size={16} />
+                        Clear Cart
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4 text-center">
@@ -252,8 +333,7 @@ function App() {
                   <Alert className="bg-card/50 border-primary/30">
                     <Info size={16} />
                     <AlertDescription className="text-xs">
-                      <strong>WebMCP Tip:</strong> Use the <code className="font-mono bg-muted px-1 rounded">get_active_cart</code> tool 
-                      in the WebMCP Tools tab to see detailed cart data in JSON format.
+                      <strong>WebMCP Tools:</strong> The <code className="font-mono bg-muted px-1 rounded">clear_cart</code>, <code className="font-mono bg-muted px-1 rounded">remove_item_from_cart</code>, and <code className="font-mono bg-muted px-1 rounded">update_cart_quantity</code> tools are executed when you interact with cart buttons below.
                     </AlertDescription>
                   </Alert>
                 </CardContent>
@@ -300,7 +380,54 @@ function App() {
                                 </div>
                                 <div className="text-sm text-muted-foreground space-y-1">
                                   <p>Email: {order.email}</p>
-                                  <p>Amount: ${order.amount.toFixed(2)}</p>
+                                  {editingAmount?.orderId === order.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <span>Amount: $</span>
+                                      <Input
+                                        type="number"
+                                        value={editingAmount.amount}
+                                        onChange={(e) => setEditingAmount({ orderId: order.id, amount: e.target.value })}
+                                        className="h-7 w-24"
+                                        step="0.01"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 px-2"
+                                        onClick={() => {
+                                          const newAmount = parseFloat(editingAmount.amount)
+                                          if (!isNaN(newAmount) && newAmount > 0) {
+                                            handleUpdateQuantity(order.id, newAmount)
+                                            setEditingAmount(null)
+                                          }
+                                        }}
+                                      >
+                                        <CheckCircle size={14} />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 px-2"
+                                        onClick={() => setEditingAmount(null)}
+                                      >
+                                        <X size={14} />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2">
+                                      <p>Amount: ${order.amount.toFixed(2)}</p>
+                                      {order.status === 'pending' && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => setEditingAmount({ orderId: order.id, amount: order.amount.toString() })}
+                                        >
+                                          <PencilSimple size={14} />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
                                   <p>Items: {order.items.join(', ')}</p>
                                   <p className="text-xs">
                                     Created: {new Date(order.createdAt).toLocaleString()}
@@ -309,13 +436,23 @@ function App() {
                               </div>
                               <div className="flex flex-col gap-2">
                                 {order.status === 'pending' && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCheckout(order.id)}
-                                  >
-                                    <CheckCircle className="mr-1" size={16} />
-                                    Checkout
-                                  </Button>
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleCheckout(order.id)}
+                                    >
+                                      <CheckCircle className="mr-1" size={16} />
+                                      Checkout
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => handleRemoveFromCart(order.id)}
+                                    >
+                                      <Trash className="mr-1" size={16} />
+                                      Remove
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </div>
