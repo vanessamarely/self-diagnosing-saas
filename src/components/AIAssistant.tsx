@@ -428,15 +428,19 @@ export function AIAssistant({ appState }: AIAssistantProps) {
                 <div className="space-y-2">
                   <h3 className="font-semibold text-sm">Technical Details</h3>
                   <Card className="bg-muted/30">
-                    <ScrollArea className="max-h-[200px]">
-                      <CardContent className="p-3">
-                        {diagnosticSteps.find(s => s.tool === 'reproduce_bug')?.result && (
-                          <JsonViewer 
-                            data={diagnosticSteps.find(s => s.tool === 'reproduce_bug')?.result} 
-                          />
-                        )}
-                      </CardContent>
-                    </ScrollArea>
+                    <CardContent className="p-3">
+                      <ScrollArea className="max-h-[200px]">
+                        <div className="pr-3">
+                          {diagnosticSteps.find(s => s.tool === 'reproduce_bug')?.result ? (
+                            <JsonViewer 
+                              data={diagnosticSteps.find(s => s.tool === 'reproduce_bug')?.result} 
+                            />
+                          ) : (
+                            <p className="text-xs text-muted-foreground">No technical details available yet</p>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
                   </Card>
                 </div>
               </div>

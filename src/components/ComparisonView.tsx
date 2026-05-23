@@ -88,26 +88,35 @@ const traditionalSteps: DebugStep[] = [
 const webmcpSteps: DebugStep[] = [
   {
     id: 1,
-    description: 'Call get_failed_events tool',
-    command: 'window.webMCP.tools.call("get_failed_events")',
-    result: 'Complete error context retrieved',
+    description: 'Call get_app_state tool',
+    command: 'await window.webMCP.tools.call("get_app_state")',
+    result: 'Retrieved complete application state snapshot',
     status: 'complete',
-    timeEstimate: '10 sec'
+    timeEstimate: '3 sec'
   },
   {
     id: 2,
-    description: 'Call reproduce_bug tool',
-    command: 'window.webMCP.tools.call("reproduce_bug")',
-    result: 'Root cause identified with full context',
+    description: 'Call get_failed_events tool',
+    command: 'await window.webMCP.tools.call("get_failed_events")',
+    result: 'Complete error context with metadata retrieved',
     status: 'complete',
-    timeEstimate: '5 sec'
+    timeEstimate: '3 sec'
   },
   {
     id: 3,
-    description: 'Review structured diagnosis',
-    result: 'Clear explanation: Permission conflict between user role and approval requirement',
+    description: 'Call reproduce_bug tool',
+    command: 'await window.webMCP.tools.call("reproduce_bug")',
+    result: 'Root cause identified with full context',
     status: 'complete',
-    timeEstimate: '30 sec'
+    timeEstimate: '3 sec'
+  },
+  {
+    id: 4,
+    description: 'Call generate_bug_report for recommendations',
+    command: 'await window.webMCP.tools.call("generate_bug_report")',
+    result: 'Structured diagnosis with resolution steps generated',
+    status: 'complete',
+    timeEstimate: '3 sec'
   }
 ]
 
@@ -131,7 +140,7 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
   const totalWebMCPTime = webmcpSteps.reduce((acc, step) => {
     const time = parseInt(step.timeEstimate?.split(' ')[0] || '0')
     return acc + time
-  }, 0)
+  }, 0) / 60
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
@@ -168,7 +177,7 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
                 <AlertDescription className="text-xs space-y-2">
                   <p><strong>Scenario:</strong> Developer sees "Checkout failed" error with no details.</p>
                   <p><strong>Without WebMCP:</strong> Search code, add console.logs, rebuild, test... 44+ minutes</p>
-                  <p><strong>With WebMCP:</strong> Agent calls <code className="font-mono bg-muted px-1 rounded">get_failed_events()</code> and <code className="font-mono bg-muted px-1 rounded">reproduce_bug()</code>, gets complete context in seconds.</p>
+                  <p><strong>With WebMCP:</strong> Agent calls debugging tools (<code className="font-mono bg-muted px-1 rounded">get_app_state</code>, <code className="font-mono bg-muted px-1 rounded">get_failed_events</code>, <code className="font-mono bg-muted px-1 rounded">reproduce_bug</code>, <code className="font-mono bg-muted px-1 rounded">generate_bug_report</code>) via W3C <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code>, gets complete diagnosis in 12 seconds.</p>
                   <p className="text-primary font-semibold">This application demonstrates this exact use case below! ↓</p>
                 </AlertDescription>
               </Alert>
@@ -308,7 +317,7 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
               </div>
               <Badge variant="default" className="gap-1 bg-accent text-accent-foreground">
                 <Clock size={14} />
-                {totalWebMCPTime} sec
+                {totalWebMCPTime.toFixed(1)} sec
               </Badge>
             </div>
             <CardDescription>
@@ -354,14 +363,15 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
             {!showWebMCPResult ? (
               <Alert className="border-primary bg-primary/10">
                 <Robot className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-xs">
+                <AlertDescription className="text-xs space-y-2">
+                  <p>WebMCP tools expose internal application state instantly via W3C standard API.</p>
                   <Button 
                     size="sm" 
-                    className="w-full mt-2"
+                    className="w-full"
                     onClick={executeWebMCPDemo}
                   >
                     <Code className="mr-2" />
-                    Execute WebMCP Demo
+                    Execute reproduce_bug Tool
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -370,13 +380,17 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <CheckCircle className="text-accent" />
-                    Bug Diagnosed
+                    Bug Diagnosed via WebMCP
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <ScrollArea className="max-h-[200px]">
                     <div className="px-4 pb-4">
-                      <JsonViewer data={webmcpResult} />
+                      {webmcpResult ? (
+                        <JsonViewer data={webmcpResult} />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No data available</p>
+                      )}
                     </div>
                   </ScrollArea>
                 </CardContent>
@@ -391,7 +405,7 @@ export function ComparisonView({ appState }: ComparisonViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-accent">
-                {Math.round((totalTraditionalTime / totalWebMCPTime) * 10) / 10}x
+                {Math.round((totalTraditionalTime / (totalWebMCPTime / 60)) * 10) / 10}x
               </div>
               <div className="text-xs text-muted-foreground">Faster with WebMCP</div>
             </div>
