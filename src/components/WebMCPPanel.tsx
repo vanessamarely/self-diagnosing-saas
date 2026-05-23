@@ -228,8 +228,18 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-xs">
-              <strong>W3C WebMCP Polyfill Active:</strong> This browser doesn't support the W3C standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API yet. 
-              Tools are available via <code className="font-mono bg-muted px-1 rounded">window.webMCP</code> compatibility layer.
+              <strong>Polyfill Mode Active:</strong> This browser doesn't support the W3C standard <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API yet. 
+              All WebMCP tools are still fully functional via the <code className="font-mono bg-muted px-1 rounded">window.webMCP</code> compatibility layer.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {webmcpStatus.isSupported && (
+          <Alert className="border-accent bg-accent/10">
+            <CheckCircle className="h-4 w-4 text-accent" />
+            <AlertDescription className="text-xs">
+              <strong>Native WebMCP Supported:</strong> This browser supports the W3C <code className="font-mono bg-muted px-1 rounded">navigator.modelContext</code> API. 
+              Tools are registered natively and can be discovered by AI agents automatically.
             </AlertDescription>
           </Alert>
         )}
