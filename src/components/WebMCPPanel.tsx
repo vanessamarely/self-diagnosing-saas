@@ -89,6 +89,45 @@ const toolCategories: Array<{ category: string; tools: ToolInfo[] }> = [
           ]
         }
       },
+      { 
+        name: 'remove_item_from_cart' as WebMCPTool, 
+        description: 'Remove specific item from cart',
+        tooltip: {
+          purpose: 'Removes a specific order/item from the shopping cart by order ID',
+          whenToUse: 'When you need to remove unwanted items from the cart',
+          examples: [
+            'Remove order with ID "order_123"',
+            'Test cart removal workflows',
+            'Clean up incorrect cart items'
+          ]
+        }
+      },
+      { 
+        name: 'clear_cart' as WebMCPTool, 
+        description: 'Clear all items from cart',
+        tooltip: {
+          purpose: 'Removes all pending items from the shopping cart at once',
+          whenToUse: 'When you need to empty the entire cart',
+          examples: [
+            'Reset cart to empty state',
+            'Cancel all pending orders',
+            'Test cart clearing workflows'
+          ]
+        }
+      },
+      { 
+        name: 'update_cart_quantity' as WebMCPTool, 
+        description: 'Update item quantity/amount',
+        tooltip: {
+          purpose: 'Updates the quantity or price amount of a specific cart item',
+          whenToUse: 'When you need to modify cart item quantities or pricing',
+          examples: [
+            'Change order amount to $150',
+            'Update item quantity',
+            'Test price adjustment workflows'
+          ]
+        }
+      },
     ]
   },
   {
@@ -286,7 +325,7 @@ export function WebMCPPanel({ appState }: WebMCPPanelProps) {
           </AccordionItem>
         </Accordion>
         
-        <Accordion type="multiple" defaultValue={['state', 'config', 'debug']} className="flex-shrink-0">
+        <Accordion type="multiple" defaultValue={['state', 'shopping-cart', 'config', 'debug']} className="flex-shrink-0">
           {toolCategories.map(({ category, tools }) => (
             <AccordionItem 
               key={category} 

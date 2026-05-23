@@ -432,6 +432,213 @@ export function initializeWebMCPTools() {
     }
   })
 
+  registerWebMCPTool({
+    name: 'remove_item_from_cart',
+    description: 'Removes a specific item from the shopping cart by order ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        orderId: {
+          type: 'string',
+          description: 'The unique identifier of the order/item to remove from cart'
+        }
+      },
+      required: ['orderId']
+    },
+    async execute(args) {
+      if (!appStateRef) throw new Error('App state not initialized')
+      const state = appStateRef
+      
+      const orderId = args.orderId as string
+      
+      if (!orderId) {
+        throw new Error('orderId is required')
+      }
+      
+      const orderToRemove = state.orders.find(
+        order => order.id === orderId && order.status === 'pending'
+      )
+      
+      if (!orderToRemove) {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: `Order '${orderId}' not found in cart or is not in pending status`,
+              orderId,
+              timestamp: new Date().toISOString()
+            })
+          }]
+        }
+      }
+      
+      const result = {
+        success: true,
+        message: `Item removed from cart successfully`,
+        orderId,
+        removedOrder: {
+          customerName: orderToRemove.customerName,
+          items: orderToRemove.items,
+          amount: orderToRemove.amount
+        },
+        timestamp: new Date().toISOString(),
+        note: 'This is a demonstration tool. In a real implementation, this would trigger the application\'s removeFromCart action and update the cart state.'
+      }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
+    }
+  })
+
+  registerWebMCPTool({
+    name: 'clear_cart',
+    description: 'Removes all items from the shopping cart (all pending orders)',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    async execute() {
+      if (!appStateRef) throw new Error('App state not initialized')
+      const state = appStateRef
+      
+      const pendingOrders = state.orders.filter(order => order.status === 'pending')
+      
+      if (pendingOrders.length === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              success: true,
+              message: 'Cart is already empty',
+              removedCount: 0,
+              timestamp: new Date().toISOString()
+            })
+          }]
+        }
+      }
+      
+      const totalAmount = pendingOrders.reduce((sum, order) => sum + order.amount, 0)
+      
+      const result = {
+        success: true,
+        message: `Cart cleared successfully`,
+        removedCount: pendingOrders.length,
+        totalAmount_usd: totalAmount,
+        removedOrders: pendingOrders.map(order => ({
+          orderId: order.id,
+          customerName: order.customerName,
+          items: order.items,
+          amount: order.amount
+        })),
+        timestamp: new Date().toISOString(),
+        note: 'This is a demonstration tool. In a real implementation, this would trigger the application\'s clearCart action and update the cart state.'
+      }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
+    }
+  })
+
+  registerWebMCPTool({
+    name: 'update_cart_quantity',
+    description: 'Updates the quantity or amount of a specific cart item',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        orderId: {
+          type: 'string',
+          description: 'The unique identifier of the order/item to update'
+        },
+        newAmount: {
+          type: 'number',
+          description: 'The new amount/price for this order'
+        }
+      },
+      required: ['orderId', 'newAmount']
+    },
+    async execute(args) {
+      if (!appStateRef) throw new Error('App state not initialized')
+      const state = appStateRef
+      
+      const orderId = args.orderId as string
+      const newAmount = args.newAmount as number
+      
+      if (!orderId) {
+        throw new Error('orderId is required')
+      }
+      
+      if (newAmount === undefined || newAmount === null) {
+        throw new Error('newAmount is required')
+      }
+      
+      if (newAmount < 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: 'Amount cannot be negative',
+              orderId,
+              timestamp: new Date().toISOString()
+            })
+          }]
+        }
+      }
+      
+      const orderToUpdate = state.orders.find(
+        order => order.id === orderId && order.status === 'pending'
+      )
+      
+      if (!orderToUpdate) {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: `Order '${orderId}' not found in cart or is not in pending status`,
+              orderId,
+              timestamp: new Date().toISOString()
+            })
+          }]
+        }
+      }
+      
+      const previousAmount = orderToUpdate.amount
+      
+      const result = {
+        success: true,
+        message: `Cart item quantity/amount updated successfully`,
+        orderId,
+        previousAmount_usd: previousAmount,
+        newAmount_usd: newAmount,
+        difference_usd: newAmount - previousAmount,
+        orderDetails: {
+          customerName: orderToUpdate.customerName,
+          items: orderToUpdate.items
+        },
+        timestamp: new Date().toISOString(),
+        note: 'This is a demonstration tool. In a real implementation, this would trigger the application\'s updateCartQuantity action and update the cart state.'
+      }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
+    }
+  })
+
   syncWebMCPTools()
 
   if (typeof window !== 'undefined') {

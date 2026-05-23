@@ -58,6 +58,9 @@ export type WebMCPTool =
   | 'generate_bug_report'
   | 'get_active_cart'
   | 'add_item_to_cart'
+  | 'remove_item_from_cart'
+  | 'clear_cart'
+  | 'update_cart_quantity'
 
 export interface WebMCPToolResult {
   tool: WebMCPTool
