@@ -8,26 +8,11 @@ interface WebMCPToolDefinition {
     properties?: Record<string, unknown>
     required?: string[]
   }
-  handler: (args: Record<string, unknown>) => unknown
-}
-
-interface ModelContextTool {
-  name: string
-  description: string
-  inputSchema: {
-    type: string
-    properties?: Record<string, unknown>
-    required?: string[]
-  }
-  handler: (args: Record<string, unknown>) => unknown | Promise<unknown>
-}
-
-interface ProvideContextParams {
-  tools: ModelContextTool[]
+  execute: (args: Record<string, unknown>) => Promise<{ content: Array<{ type: string; text: string }> }>
 }
 
 interface ModelContextAPI {
-  provideContext(params: ProvideContextParams): void
+  provideContext(params: { tools: WebMCPToolDefinition[] }): void
 }
 
 interface NavigatorWithModelContext {
@@ -36,7 +21,15 @@ interface NavigatorWithModelContext {
 
 interface WebMCPInterface {
   tools: {
-    list: () => WebMCPToolDefinition[]
+    list: () => Array<{
+      name: string
+      description: string
+      inputSchema: {
+        type: 'object'
+        properties?: Record<string, unknown>
+        required?: string[]
+      }
+    }>
     call: (name: string, args?: Record<string, unknown>) => unknown
   }
   isSupported: boolean
@@ -51,10 +44,13 @@ export function setAppState(state: AppState) {
 }
 
 function isWebMCPSupported(): boolean {
-  return typeof window !== 'undefined' && 
-         'navigator' in window && 
-         'modelContext' in window.navigator &&
-         typeof (window.navigator as unknown as NavigatorWithModelContext).modelContext?.provideContext === 'function'
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false
+  }
+  
+  const nav = navigator as unknown as NavigatorWithModelContext
+  return 'modelContext' in nav && 
+         typeof nav.modelContext?.provideContext === 'function'
 }
 
 function registerWebMCPTool(definition: WebMCPToolDefinition) {
@@ -67,27 +63,23 @@ function registerWebMCPTool(definition: WebMCPToolDefinition) {
 }
 
 function syncWebMCPTools() {
-  if (typeof window !== 'undefined') {
-    const nav = window.navigator as NavigatorWithModelContext
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return
+  }
+  
+  if (isWebMCPSupported()) {
+    const nav = navigator as unknown as NavigatorWithModelContext
     
-    if (isWebMCPSupported() && nav.modelContext) {
-      try {
-        const tools = toolDefinitions.map(def => ({
-          name: def.name,
-          description: def.description,
-          inputSchema: def.inputSchema,
-          handler: def.handler
-        }))
-        
-        nav.modelContext!.provideContext({
-          tools: tools
-        })
-        
-        console.log('[WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext')
-        console.log('[WebMCP Native] ✓ Registered tools:', toolDefinitions.map(t => t.name))
-      } catch (error) {
-        console.error('[WebMCP Native] ✗ Error registering tools:', error)
-      }
+    try {
+      nav.modelContext!.provideContext({
+        tools: toolDefinitions
+      })
+      
+      console.log('[WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext')
+      console.log('[WebMCP Native] ✓ Registered tools:', toolDefinitions.map(t => t.name))
+    } catch (error) {
+      console.error('[WebMCP Native] ✗ Error registering tools:', error)
+      console.error('[WebMCP Native] ✗ Error details:', error instanceof Error ? error.message : String(error))
     }
   }
 }
@@ -101,7 +93,10 @@ export function executeTool(name: WebMCPTool, state: AppState): WebMCPToolResult
     throw new Error(`Tool ${name} not registered`)
   }
 
-  const data = tool.handler({})
+  const resultPromise = tool.execute({})
+  const data = resultPromise instanceof Promise ? 
+    resultPromise.then(r => JSON.parse(r.content[0].text)) :
+    resultPromise
   
   return {
     tool: name,
@@ -119,10 +114,10 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
       const state = appStateRef
-      return {
+      const result = {
         ordersCount: state.orders.length,
         ordersByStatus: state.orders.reduce((acc, order) => {
           acc[order.status] = (acc[order.status] || 0) + 1
@@ -133,6 +128,12 @@ export function initializeWebMCPTools() {
         failedEventsCount: state.failedEvents.length,
         userRole: state.userSession.role,
         userPermissions: state.userSession.permissions,
+      }
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
       }
     }
   })
@@ -145,9 +146,14 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
-      return appStateRef.userSession
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(appStateRef.userSession)
+        }]
+      }
     }
   })
 
@@ -159,9 +165,14 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
-      return appStateRef.businessRules
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(appStateRef.businessRules)
+        }]
+      }
     }
   })
 
@@ -173,9 +184,14 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
-      return appStateRef.failedEvents
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(appStateRef.failedEvents)
+        }]
+      }
     }
   })
 
@@ -187,15 +203,20 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
       const state = appStateRef
       const lastFailedEvent = state.failedEvents[state.failedEvents.length - 1]
       
       if (!lastFailedEvent) {
         return {
-          status: 'no_bugs_found',
-          message: 'No failed events to reproduce',
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              status: 'no_bugs_found',
+              message: 'No failed events to reproduce',
+            })
+          }]
         }
       }
 
@@ -210,7 +231,7 @@ export function initializeWebMCPTools() {
         affectedFlags.includes(flag.name)
       )
 
-      return {
+      const result = {
         status: 'reproduced',
         failedEvent: lastFailedEvent,
         conflictingRules: relevantRules,
@@ -231,6 +252,13 @@ export function initializeWebMCPTools() {
           `6. Result: ${lastFailedEvent.errorMessage}`,
         ],
       }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
     }
   })
 
@@ -242,7 +270,7 @@ export function initializeWebMCPTools() {
       properties: {},
       required: []
     },
-    handler: () => {
+    async execute() {
       if (!appStateRef) throw new Error('App state not initialized')
       const state = appStateRef
       const recentFailures = state.failedEvents.slice(-5)
@@ -267,7 +295,7 @@ export function initializeWebMCPTools() {
         event.context.reason === 'feature_flag_conflict'
       )
 
-      return {
+      const result = {
         summary: {
           totalFailures: state.failedEvents.length,
           recentFailures: recentFailures.length,
@@ -308,6 +336,13 @@ export function initializeWebMCPTools() {
           'Add validation to prevent conflicting configurations',
         ],
       }
+      
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify(result)
+        }]
+      }
     }
   })
 
@@ -318,11 +353,16 @@ export function initializeWebMCPTools() {
     
     const webMCP: WebMCPInterface = {
       tools: {
-        list: () => toolDefinitions,
-        call: (name: string, args: Record<string, unknown> = {}) => {
+        list: () => toolDefinitions.map(t => ({
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema
+        })),
+        call: async (name: string, args: Record<string, unknown> = {}) => {
           const tool = toolDefinitions.find(t => t.name === name)
           if (!tool) throw new Error(`Tool ${name} not found`)
-          return tool.handler(args)
+          const result = await tool.execute(args)
+          return JSON.parse(result.content[0].text)
         }
       },
       isSupported: supported,
