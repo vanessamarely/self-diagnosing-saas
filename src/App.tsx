@@ -28,6 +28,7 @@ import { initializeWebMCPTools, setAppState } from '@/lib/webmcp'
 import { WebMCPPanel } from '@/components/WebMCPPanel'
 import { ComparisonView } from '@/components/ComparisonView'
 import { AIAssistant } from '@/components/AIAssistant'
+import { WebMCPBadges } from '@/components/WebMCPBadges'
 import { toast, Toaster } from 'sonner'
 
 function App() {
@@ -217,12 +218,15 @@ function App() {
       
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-2xl font-bold">Self-Diagnosing SaaS Dashboard</h1>
               <p className="text-sm text-muted-foreground">
                 WebMCP Demo - Context-Aware Debugging
               </p>
+              <div className="mt-2">
+                <WebMCPBadges />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <UserCircle size={24} className="text-muted-foreground" />
