@@ -14,11 +14,27 @@ The guide includes:
 
 **→ [WEBMCP_TEST_GUIDE.md](./WEBMCP_TEST_GUIDE.md) ← Complete browser console testing guide**
 
-Comprehensive testing instructions for all 6 WebMCP tools:
+Comprehensive testing instructions for all 8 WebMCP tools:
 - 🧪 Detailed test procedures for each tool
 - 📊 Expected output for every test case
 - 🔄 Native vs Polyfill mode testing
+- 🛒 Shopping cart tools testing
 - ✅ Complete verification checklist
+
+**→ [SHOPPING_CART_TOOLS_TEST.md](./SHOPPING_CART_TOOLS_TEST.md) ← Detailed shopping cart tools guide**
+
+In-depth testing for the new shopping cart WebMCP tools:
+- 🛒 `get_active_cart` - Retrieve cart contents
+- ➕ `add_item_to_cart` - Add items programmatically
+- 📝 Complete test scenarios
+- 🔍 Integration testing workflows
+
+**→ [QUICK_CART_TEST.md](./QUICK_CART_TEST.md) ← Quick console test for shopping cart tools**
+
+Fast copy-paste console tests:
+- ⚡ One-line verification
+- 🚀 Complete test suite script
+- 📋 Expected output examples
 
 ## About This Application
 
@@ -102,14 +118,23 @@ window.webMCP = {
 
 ### 3. Available Tools
 
-This demo registers 6 WebMCP tools:
+This demo registers **8 WebMCP tools**:
 
+#### State & Session Tools
 1. **get_app_state** - Overview of orders, flags, rules, and user state
 2. **get_user_session** - Current user role and permissions
-3. **get_business_rules** - All business rules and their conditions
-4. **get_failed_events** - Complete log of failed operations with context
-5. **reproduce_bug** - Step-by-step reproduction of the last bug
-6. **generate_bug_report** - Comprehensive analysis with root causes
+
+#### Shopping Cart Tools (NEW!)
+3. **get_active_cart** - Retrieve cart contents with items, quantities, and totals
+4. **add_item_to_cart** - Add items to cart programmatically
+
+#### Configuration Tools
+5. **get_business_rules** - All business rules and their conditions
+
+#### Debugging Tools
+6. **get_failed_events** - Complete log of failed operations with context
+7. **reproduce_bug** - Step-by-step reproduction of the last bug
+8. **generate_bug_report** - Comprehensive analysis with root causes
 
 ## Demo Features
 
@@ -204,14 +229,21 @@ window.webMCP.tools.call('reproduce_bug')
 
 ### In the Browser Console:
 ```javascript
-// List all available tools
+// List all available tools (should show 8 tools)
 window.webMCP.tools.list()
 
-// Call a specific tool
+// Call debugging tools
 window.webMCP.tools.call('get_app_state')
 window.webMCP.tools.call('get_failed_events')
 window.webMCP.tools.call('reproduce_bug')
 window.webMCP.tools.call('generate_bug_report')
+
+// Call shopping cart tools
+window.webMCP.tools.call('get_active_cart')
+window.webMCP.tools.call('add_item_to_cart', {
+  productId: 'prod_123',
+  quantity: 2
+})
 
 // This is what AI agents would use to debug your app!
 ```

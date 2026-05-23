@@ -1,6 +1,6 @@
 # WebMCP Tools Testing Guide
 
-This guide will help you verify that all 6 WebMCP tools are working correctly in your browser.
+This guide will help you verify that all 8 WebMCP tools are working correctly in your browser.
 
 ## Quick Start
 
@@ -39,17 +39,27 @@ window.webMCP
 // List all registered tools
 window.webMCP.tools.list()
 
-// Expected output: Array of 6 tools
+// Expected output: Array of 8 tools
 // Each tool has: name, description, inputSchema, handler
 ```
 
-You should see these 6 tools:
+You should see these 8 tools:
+
+### State & Session Tools
 1. `get_app_state`
 2. `get_user_session`
-3. `get_business_rules`
-4. `get_failed_events`
-5. `reproduce_bug`
-6. `generate_bug_report`
+
+### Shopping Cart Tools (NEW!)
+3. `get_active_cart`
+4. `add_item_to_cart`
+
+### Configuration Tools
+5. `get_business_rules`
+
+### Debugging Tools
+6. `get_failed_events`
+7. `reproduce_bug`
+8. `generate_bug_report`
 
 ## Test Each Tool
 
@@ -79,7 +89,67 @@ window.webMCP.tools.call('get_app_state')
 
 ---
 
-### Test 2: get_user_session
+### Test 2: get_active_cart
+
+```javascript
+window.webMCP.tools.call('get_active_cart')
+```
+
+**Expected Output:**
+```json
+{
+  "items": [
+    {
+      "orderId": "ord_1234567890",
+      "customerName": "Alice",
+      "email": "alice@test.com",
+      "items": ["Custom Order"],
+      "quantity": 1,
+      "price_usd": 50,
+      "createdAt": "2025-01-15T14:25:00.000Z"
+    }
+  ],
+  "itemCount": 1,
+  "total_usd": 50,
+  "currency": "USD",
+  "timestamp": "2025-01-15T14:30:00.000Z"
+}
+```
+
+**✅ Success Criteria:** Returns cart with items array, itemCount, total_usd, and only includes pending orders
+
+**Note:** Create some pending orders first using the "Create Order" tab to see items in the cart.
+
+---
+
+### Test 3: add_item_to_cart
+
+```javascript
+window.webMCP.tools.call('add_item_to_cart', {
+  productId: 'prod_test_001',
+  quantity: 2
+})
+```
+
+**Expected Output:**
+```json
+{
+  "success": true,
+  "message": "Item added successfully",
+  "productId": "prod_test_001",
+  "quantity": 2,
+  "timestamp": "2025-01-15T14:35:00.000Z",
+  "note": "This is a demonstration tool. In a real implementation, this would trigger the application's addToCart action and update the cart state."
+}
+```
+
+**✅ Success Criteria:** Returns success response with productId and quantity
+
+**Note:** This is a demonstration tool that shows the API pattern. Use the "Create Order" UI to actually add items to cart.
+
+---
+
+### Test 4: get_user_session
 
 ```javascript
 window.webMCP.tools.call('get_user_session')
@@ -101,7 +171,7 @@ window.webMCP.tools.call('get_user_session')
 
 ---
 
-### Test 3: get_business_rules
+### Test 5: get_business_rules
 
 ```javascript
 window.webMCP.tools.call('get_business_rules')
@@ -133,7 +203,7 @@ window.webMCP.tools.call('get_business_rules')
 
 ---
 
-### Test 4: get_failed_events
+### Test 6: get_failed_events
 
 ```javascript
 window.webMCP.tools.call('get_failed_events')
@@ -169,7 +239,7 @@ window.webMCP.tools.call('get_failed_events')
 
 ---
 
-### Test 5: reproduce_bug
+### Test 7: reproduce_bug
 
 First, trigger a bug by:
 1. Go to "Create Order" tab
@@ -234,7 +304,7 @@ window.webMCP.tools.call('reproduce_bug')
 
 ---
 
-### Test 6: generate_bug_report
+### Test 8: generate_bug_report
 
 ```javascript
 window.webMCP.tools.call('generate_bug_report')
@@ -277,20 +347,30 @@ window.webMCP.tools.call('generate_bug_report')
 Run all tests in sequence:
 
 ```javascript
-// Run all 6 tools in sequence
+// Run all 8 tools in sequence
 const tools = [
   'get_app_state',
-  'get_user_session', 
+  'get_user_session',
+  'get_active_cart',
+  'add_item_to_cart',
   'get_business_rules',
   'get_failed_events',
   'reproduce_bug',
   'generate_bug_report'
 ];
 
-tools.forEach(tool => {
+// Test read-only tools
+tools.filter(t => t !== 'add_item_to_cart').forEach(tool => {
   console.log(`\n========== ${tool} ==========`);
   console.log(window.webMCP.tools.call(tool));
 });
+
+// Test add_item_to_cart separately with parameters
+console.log('\n========== add_item_to_cart ==========');
+console.log(window.webMCP.tools.call('add_item_to_cart', {
+  productId: 'test_prod_123',
+  quantity: 3
+}));
 ```
 
 ## Testing Native vs Polyfill Mode
@@ -316,14 +396,14 @@ When the page loads, you should see:
 **Native Mode (if supported):**
 ```
 [WebMCP Native] ✓ All tools registered via navigator.modelContext.provideContext
-[WebMCP Native] ✓ Registered tools: (6) ['get_app_state', 'get_user_session', 'get_business_rules', 'get_failed_events', 'reproduce_bug', 'generate_bug_report']
+[WebMCP Native] ✓ Registered tools: (8) ['get_app_state', 'get_user_session', 'get_business_rules', 'get_failed_events', 'reproduce_bug', 'generate_bug_report', 'get_active_cart', 'add_item_to_cart']
 ```
 
 **Polyfill Mode:**
 ```
 [WebMCP Polyfill] navigator.modelContext.provideContext not available
 [WebMCP Polyfill] Using fallback window.webMCP interface
-[WebMCP Polyfill] Registered tools: (6) ['get_app_state', 'get_user_session', 'get_business_rules', 'get_failed_events', 'reproduce_bug', 'generate_bug_report']
+[WebMCP Polyfill] Registered tools: (8) ['get_app_state', 'get_user_session', 'get_business_rules', 'get_failed_events', 'reproduce_bug', 'generate_bug_report', 'get_active_cart', 'add_item_to_cart']
 [WebMCP Polyfill] Try: window.webMCP.tools.list()
 ```
 
@@ -354,9 +434,11 @@ When the page loads, you should see:
 Use this checklist to verify all tools work:
 
 - [ ] `window.webMCP` is defined
-- [ ] `window.webMCP.tools.list()` returns 6 tools
+- [ ] `window.webMCP.tools.list()` returns 8 tools
 - [ ] ✅ `get_app_state` returns state summary
 - [ ] ✅ `get_user_session` returns user info
+- [ ] ✅ `get_active_cart` returns cart data
+- [ ] ✅ `add_item_to_cart` accepts parameters and returns success
 - [ ] ✅ `get_business_rules` returns rules array
 - [ ] ✅ `get_failed_events` returns events (or empty array)
 - [ ] ✅ `reproduce_bug` reproduces last failure (after triggering one)
@@ -408,4 +490,15 @@ To test the full debugging workflow:
 
 ## Summary
 
-All 6 WebMCP tools should work in both Native and Polyfill mode. The polyfill ensures compatibility even without native browser support, making the tools universally accessible via `window.webMCP.tools.call()`.
+All 8 WebMCP tools should work in both Native and Polyfill mode. The polyfill ensures compatibility even without native browser support, making the tools universally accessible via `window.webMCP.tools.call()`.
+
+## Additional Resources
+
+For detailed testing of the shopping cart tools specifically, see: **SHOPPING_CART_TOOLS_TEST.md**
+
+That guide includes:
+- Detailed shopping cart tool testing scenarios
+- UI testing procedures
+- Integration tests with cart state
+- Complete console test scripts
+- Troubleshooting for cart-specific issues
